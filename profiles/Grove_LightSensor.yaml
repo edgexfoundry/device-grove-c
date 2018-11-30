@@ -1,0 +1,34 @@
+name: "Grove_LightSensor"
+manufacturer: "Seeed"
+model: ""
+labels:
+- "Grove LightSensor"
+description: "Configure the Grove Light Sensor to measure light levels"
+deviceResources:
+- name: LightIntensity
+  description: "Read Light Intensity"
+  attributes:
+    { Pin_Num: "A0", Interface: "AIO", Type: "IN" }
+  properties:
+    value:
+      { type: "Float32", readWrite: "RW", minimum: "0", maximum: "", defaultValue: "0" }
+    units:
+      { type: "String", readWrite: "R", defaultValue: "lumen" }
+
+resources:
+- name: Get_LightIntensity
+  get:
+  - { operation: "get", object: "LightIntensity", property: "value", parameter: "LightIntensity" }
+-
+
+commands:
+- name: Get_LightIntensity
+  get:
+    path: "/api/v1/device/{deviceId}/Get_LightIntensity"
+    responses:
+    - code: "200"
+      description: "valid and accepted"
+      expectedValues: ["LightIntensity"]
+    - code: "503"
+      description: "service unavailable"
+      expectedValues: []

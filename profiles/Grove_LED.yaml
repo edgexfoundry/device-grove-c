@@ -1,0 +1,96 @@
+name: "Grove_LED"
+manufacturer: "Seeed"
+model: ""
+labels:
+- "Grove LED"
+description: "Configure the Grove LED to turn on/off"
+deviceResources:
+- name: Green-LED
+  description: "Turn the Green LED to On/Off"
+  attributes:
+    { Pin_Num: "D3", Interface: "GPIO", Type: "OUT" }
+  properties:
+    value:
+      { type: "Bool", readWrite: "RW", size: "1", minimum: "0", maximum: "1", defaultValue: "0" }
+    units:
+      { type: "String", readWrite: "R", defaultValue: "Enabled/Disabled" }
+
+- name: Red-LED
+  description: "Turn the Red LED to On/Off"
+  attributes:
+    { Pin_Num: "D6", Interface: "GPIO", Type: "OUT" }
+  properties:
+    value:
+      { type: "Bool", readWrite: "RW", size: "1", minimum: "0", maximum: "1", defaultValue: "0" }
+    units:
+      { type: "String", readWrite: "R", defaultValue: "Enabled/Disabled" }
+
+- name: Blue-LED
+  description: "Turn the Blue LED to On/Off"
+  attributes:
+    { Pin_Num: "D2", Interface: "GPIO", Type: "OUT" }
+  properties:
+    value:
+      { type: "Bool", readWrite: "RW", size: "1", minimum: "0", maximum: "1", defaultValue: "0" }
+    units:
+      { type: "String", readWrite: "R", defaultValue: "Enabled/Disabled" }
+
+resources:
+- name: Set_GreenLed
+  set:
+  - { operation: "set", object: "Green-LED", property: "value", parameter: "Green-LED" }
+
+- name: Set_RedLed
+  set:
+  - { operation: "set", object: "Red-LED", property: "value", parameter: "Red-LED" }
+
+- name: Set_BlueLed
+  set:
+  - { operation: "set", object: "Blue-LED", property: "value", parameter: "Blue-LED" }
+
+commands:
+- name: Set_GreenLed
+  put:
+    path: "/api/v1/device/{deviceId}/Set_GreenLed"
+    parameterNames: ["Green-LED"]
+    responses:
+    - code: "204"
+      description: "valid and accepted"
+      expectedValues: []
+    - code: "400"
+      description: "bad request"
+      expectedValues: []
+    - code: "503"
+      description: "service unavailable"
+      expectedValues: []
+
+- name: Set_RedLed
+  put:
+    path: "/api/v1/device/{deviceId}/Set_RedLed"
+    parameterNames: ["Red-LED"]
+    responses:
+    - code: "204"
+      description: "valid and accepted"
+      expectedValues: []
+    - code: "400"
+      description: "bad request"
+      expectedValues: []
+    - code: "503"
+      description: "service unavailable"
+      expectedValues: []
+
+- name: Set_BlueLed
+  put:
+    path: "/api/v1/device/{deviceId}/Set_BlueLed"
+    parameterNames: ["Blue-LED"]
+    responses:
+    - code: "204"
+      description: "valid and accepted"
+      expectedValues: []
+    - code: "400"
+      description: "bad request"
+      expectedValues: []
+    - code: "503"
+      description: "service unavailable"
+      expectedValues: []
+   

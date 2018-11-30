@@ -1,0 +1,33 @@
+name: "Grove_SoundSensor"
+manufacturer: "Seeed"
+model: ""
+labels:
+- "Grove SoundSensor"
+description: "Configure the Grove Sound Sensor to detect Sound intensity of the environment"
+deviceResources:
+- name: SoundIntensity
+  description: "Get the Sound Intensity"
+  attributes:
+    { Pin_Num: "A1", Interface: "AIO", Type: "IN", normalize: "false"}
+  properties:
+    value:
+      { type: "Float32", readWrite: "RW", minimum: "0", maximum: "5", scale: "0.0049", defaultValue: "0" }
+    units:
+      { type: "String", readWrite: "R", defaultValue: "Vbiased" }
+
+resources:
+- name: Get_SoundIntensity
+  get:
+  - { operation: "get", object: "SoundIntensity", property: "value", parameter: "SoundIntensity" }
+
+commands:
+- name: Get_SoundIntensity
+  get:
+    path: "/api/v1/device/{deviceId}/Get_SoundIntensity"
+    responses:
+    - code: "200"
+      description: "valid and accepted"
+      expectedValues: ["SoundIntensity"]
+    - code: "503"
+      description: "service unavailable"
+      expectedValues: []
