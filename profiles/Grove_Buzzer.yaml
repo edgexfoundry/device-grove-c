@@ -1,0 +1,37 @@
+name: "Grove_Buzzer"
+manufacturer: "Seeed"
+model: ""
+labels:
+- "Grove Buzzer"
+description: "Configure the Grove Buzzer to emit a tone when the output is high"
+deviceResources:
+- name: Grove-Buzzer
+  description: "Turn On/Off the  buzzer"
+  attributes:
+    { Pin_Num: "D8", Interface: "GPIO", Type: "OUT" }
+  properties:
+    value:
+      { type: "Bool", readWrite: "RW", size: "1", minimum: "0", maximum: "1", defaultValue: "0" }
+    units:
+      { type: "String", readWrite: "R", defaultValue: "on/off" }
+
+resources:
+- name: Set_Buzzer
+  set:
+  - { operation: "set", object: "Grove-Buzzer", property: "value", parameter: "Grove-Buzzer" }
+
+commands:
+- name: Set_Buzzer
+  put:
+    path: "/api/v1/device/{deviceId}/Set_Buzzer"
+    parameterNames: ["Grove-Buzzer"]
+    responses:
+    - code: "204"
+      description: "valid and accepted"
+      expectedValues: []
+    - code: "400"
+      description: "bad request"
+      expectedValues: []
+    - code: "503"
+      description: "service unavailable"
+      expectedValues: []

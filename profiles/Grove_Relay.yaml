@@ -1,0 +1,37 @@
+name: "Grove_Relay"
+manufacturer: "Seeed"
+model: ""
+labels:
+- "Grove Relay"
+description: "Configure the Grove Relay to switch on/off"
+deviceResources:
+- name: Grove-Relay
+  description: "Switch the Grove Relay to On/Off"
+  attributes:
+    { Pin_Num: "D7", Interface: "GPIO", Type: "OUT" }
+  properties:
+    value:
+      { type: "Bool", readWrite: "RW", size: "1", minimum: "0", maximum: "1", defaultValue: "0" }
+    units:
+      { type: "String", readWrite: "R", defaultValue: "on/off" }
+
+resources:
+- name: Set_Relay
+  set:
+  - { operation: "set", object: "Grove-Relay", property: "value", parameter: "Grove-Relay" }
+
+commands:
+- name: Set_Relay
+  put:
+    path: "/api/v1/device/{deviceId}/Set_Relay"
+    parameterNames: ["Grove-Relay"]
+    responses:
+    - code: "204"
+      description: "valid and accepted"
+      expectedValues: []
+    - code: "400"
+      description: "bad request"
+      expectedValues: []
+    - code: "503"
+      description: "service unavailable"
+      expectedValues: []

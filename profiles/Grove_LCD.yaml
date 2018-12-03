@@ -1,0 +1,58 @@
+name: "Grove_LCD"
+manufacturer: "Seeed"
+model: "Hitachi HD44780"
+labels:
+- "Grove LCD"
+description: "Configure the Grove LCD and display a string"
+deviceResources:
+- name: Display-String
+  description: "Write a string to display on LCD"
+  attributes:
+    { Pin_Num: "I2C-2", Interface: "I2C", Type: "LCD" }
+  properties:
+    value:
+      { type: "String", readWrite: "RW", size: "16", minimum: "0", maximum: "15", defaultValue: "0" }
+    units:
+      { type: "String", readWrite: "R", defaultValue: "0" }
+- name: Row
+  description: "Set the Row number"
+  attributes:
+    { Pin_Num: "I2C-2", Interface: "I2C", Type: "LCD" }
+  properties:
+    value:
+      { type: "Uint8", readWrite: "RW", size: "1", minimum: "0", maximum: "1", defaultValue: "0" }
+    units:
+      { type: "String", readWrite: "R", defaultValue: "0" }
+- name: Column
+  description: "Set the Column number"
+  attributes:
+    { Pin_Num: "I2C-2", Interface: "I2C", Type: "LCD" }
+  properties:
+    value:
+      { type: "Uint8", readWrite: "RW", size: "1", minimum: "0", maximum: "15", defaultValue: "0" }
+    units:
+      { type: "String", readWrite: "R", defaultValue: "0" }
+
+resources:
+- name: Write_String
+  set:
+  - { index: "1", operation: "set", object: "Display-String", property: "value", parameter: "Display-String" }
+  - { index: "2", operation: "set", object: "Row", property: "value", parameter: "Row" }
+  - { index: "3", operation: "set", object: "Column", property: "value", parameter: "Column" }
+
+commands:
+- name: Write_String
+  put:
+    path: "/api/v1/device/{deviceId}/Write_String"
+    parameterNames: ["Display-String", "Row", "Column"]
+    responses:
+    - code: "204"
+      description: "valid and accepted"
+      expectedValues: []
+    - code: "400"
+      description: "bad request"
+      expectedValues: []
+    - code: "503"
+      description: "service unavailable"
+      expectedValues: []
+ 

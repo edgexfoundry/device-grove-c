@@ -1,0 +1,61 @@
+[Service]
+  Host = "edgex-device-grove"
+  Port = 49991
+  ConnectRetries = 3
+  HealthCheck = ""
+  StartupMsg = "device Grove PI started"
+  ReadMaxLimit = 256
+  Timeout = 5000
+
+[Clients]
+  [Clients.Data]
+    Host = "edgex-core-data"
+    Port = 48080
+
+  [Clients.Metadata]
+    Host = "edgex-core-metadata"
+    Port = 48081
+
+[Device]
+  DataTransform = true
+  Discovery = false
+  InitCmd = ""
+  InitCmdArgs = ""
+  MaxCmdOps = 128
+  MaxCmdResultLen = 256
+  RemoveCmd = ""
+  RemoveCmdArgs = ""
+  ProfilesDir = ""
+  SendReadingsOnChanged = true
+
+[Logging]
+  RemoteURL = ""
+  File = "./device-GrovePI.log"
+
+[[Schedules]]
+  Name = "Schedule_Grove"
+  Frequency = "PT2S"
+
+[[ScheduleEvents]]
+  Name = "RotarySensorMeasurements"
+  Schedule = "Schedule_Grove"
+  Path = "/api/v1/device/all/Get_RotarySensorMeasurements"
+
+[[ScheduleEvents]]
+  Name = "LightIntensity"
+  Schedule = "Schedule_Grove"
+  Path = "/api/v1/device/all/Get_LightIntensity"
+
+[[ScheduleEvents]]
+  Name = "SoundIntensity"
+  Schedule = "Schedule_Grove"
+  Path = "/api/v1/device/all/Get_SoundIntensity"
+
+[[DeviceList]]
+  Name = "GroveDevice"
+  Profile = "Grove_Device"
+  Description = "Grove Device to Read/Write sensors connected to GrovePI"
+  Labels = [ "Grove LED, Grove Button, Grove Buzzer, Grove LCD, Grove LightSensor, Grove Relay, Grove RotarySensor, Grove SoundSensor" ]
+  [DeviceList.Addressable]
+    Address = "/api/v1/device/DeviceGrove"
+

@@ -1,0 +1,44 @@
+name: "Grove_RotaryAngleSensor"
+manufacturer: "Seeed"
+model: ""
+labels:
+- "Grove RotaryAngleSensor"
+description: "Configure the Grove board to read the position of Rotary Sensor in Angle/Voltage"
+deviceResources:
+- name: RotaryAngle
+  description: "Read Rotary Sensor Angle"
+  attributes:
+    { Pin_Num: "A2", Interface: "AIO", Type: "IN", normalize: "false" }
+  properties:
+    value:
+      { type: "Float32", readWrite: "RW", minimum: "0", maximum: "300", scale: "0.2933", defaultValue: "0" }
+    units:
+      { type: "String", readWrite: "R", defaultValue: "Degree" }
+- name: RotaryVoltage
+  description: "Read Rotary Sensor Voltage"
+  attributes:
+    { Pin_Num: "A2", Interface: "AIO", Type: "IN", normalize: "false"}
+  properties:
+    value:
+      { type: "Float32", readWrite: "RW", minimum: "0", maximum: "5", scale: "0.0049", defaultValue: "0" }
+    units:
+      { type: "String", readWrite: "R", defaultValue: "V" }
+
+resources:
+- name: Get_RotarySensorMeasurements
+  get:
+  - { index: "1", operation: "get", object: "RotaryAngle", property: "value", parameter: "RotaryAngle" }
+  - { index: "2", operation: "get", object: "RotaryVoltage", property: "value", parameter: "RotaryVoltage" }
+
+commands:
+- name: Get_RotarySensorMeasurements
+  get:
+    path: "/api/v1/device/{deviceId}/Get_RotarySensorMeasurements"
+    responses:
+    - code: "200"
+      description: "valid and accepted"
+      expectedValues: ["RotaryAngle", "RotaryVoltage"]
+    - code: "503"
+      description: "service unavailable"
+      expectedValues: []
+
