@@ -579,12 +579,6 @@ static void grove_stop (void *impl, bool force)
       impln->dev[index] = NULL;
 
     } /* dev != NULL */
-    else
-    {
-      status |= MRAA_ERROR_UNSPECIFIED;
-      iot_log_error (impln->lc, "grove_stop(), dev ctxt is NULL - Not releasing any resource");
-      break;
-    }
   }
 
   if (status != MRAA_SUCCESS)
