@@ -25,6 +25,9 @@ sh> docker build . -t < device-grove-c > -f ./scripts/Dockerfile.alpine-3.8
 This command shall build the dependencies - libmraa and device-c-sdk library to build device-grove-c release image.
 By default, the configuration and profile file used by the service are available in __'res'__ folder.
 
+## Configuration for docker image
+1. Port number specified in the configuration.toml
+2. --device=/dev/<i2c device> to map host device to the container. For Raspberry PI, it is i2c-1.
 
 **Note:** On Raspberry PI, make sure that i2c_arm=on is set. This enables i2c-1 device, required for communication between Grove PI & Raspberry PI boards.
 

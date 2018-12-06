@@ -57,5 +57,5 @@
   Description = "Grove Device to Read/Write sensors connected to GrovePI"
   Labels = [ "Grove LED, Grove Button, Grove Buzzer, Grove LCD, Grove LightSensor, Grove Relay, Grove RotarySensor, Grove SoundSensor" ]
   [DeviceList.Addressable]
-    Address = "/api/v1/device/DeviceGrove"
+    Address = "/api/v1/device/GroveDevice"
 

@@ -23,6 +23,9 @@ COPY --from=builder /usr/local/include/mraa /usr/local/include/
 COPY --from=builder /usr/local/include/mraa.h /usr/local/include/
 COPY --from=builder /usr/local/lib/libmraa.so* /usr/local/lib/
 
+COPY VERSION /device-grove/
+COPY LICENSE /device-grove/
+COPY Attribution.txt /device-grove/
 COPY res /device-grove/res/
 COPY profiles /device-grove/profiles
 
