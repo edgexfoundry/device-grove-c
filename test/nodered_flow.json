@@ -279,7 +279,7 @@
         "id": "edb6482d.5eb0f8",
         "type": "mqtt-broker",
         "z": "",
-        "name": "DeviceGrove",
+        "name": "GroveDevice",
         "broker": "mqtt-broker",
         "port": "1883",
         "clientid": "",
