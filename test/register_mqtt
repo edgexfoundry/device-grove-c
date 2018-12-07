@@ -54,6 +54,7 @@ function register_mqtt_export (exportNameParam, filterParam, topicNameParam)
    post("export_client", "registration", { name = exportNameParam,
 					   addressable = id,
 					   format = "JSON",
+                                           filter = { deviceIdentifiers = { filterParam }},
 					   destination = "MQTT_TOPIC",
 					   enable = true })
 end
