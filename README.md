@@ -14,7 +14,7 @@ The repository can be found on git at [libmraa](https://github.com/intel-iot-dev
 
 ## Build Instruction:
 
-1. Check out device-grove-c available at [device-grove-c](https://github.com/edgexfoundry/device-grove)
+1. Check out device-grove-c available at [device-grove-c](https://github.com/edgexfoundry/device-grove-c)
 
 2. Build a docker image by using the following command
 ```
