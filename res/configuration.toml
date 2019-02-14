@@ -30,7 +30,7 @@
 
 [Logging]
   RemoteURL = ""
-  File = "./device-GrovePI.log"
+  File = "-"
 
 [[Schedules]]
   Name = "Schedule_Grove"
