@@ -1,0 +1,156 @@
+name: edgex-device-grove
+base: core18
+version: "replace-me"
+version-script: |
+  echo $(cat VERSION)-$(date +%Y%m%d)+$(git rev-parse --short HEAD)
+summary: Connect to Grove sensors on Raspberry Pi with EdgeX
+description: |
+  The EdgeX Device Grove Service is developed to control/communicate Grove 
+  sensors connected on Grove PI in an EdgeX deployment 
+
+architectures:
+  - build-on: arm64
+    run-on: arm64
+  - build-on: armhf
+    run-on: armhf
+
+grade: stable
+confinement: strict
+
+apps:
+  device-grove:
+    command: bin/device-grove $CONSUL_ADDR_OPT $CONFIG_DIR_OPT
+    adapter: full
+    environment:
+      CONSUL_ADDR_OPT: "--registry=consul://localhost:8500"
+      CONFIG_DIR_OPT: "--confdir=$SNAP_DATA/config/edgex-device-grove/res"
+    daemon: simple
+    plugs:
+      - network
+      - network-bind
+      - gpio
+      - i2c
+
+parts:
+  config:
+    source: .
+    plugin: dump
+    organize:
+      res/configuration.toml: config/edgex-device-grove/res/configuration.toml
+      res/Grove_Device.yaml: config/edgex-device-grove/res/profiles/Grove_Device.yaml
+      LICENSE: usr/share/doc/edgex-device-grove/LICENSE
+      profiles: config/edgex-device-grove/res/example-profiles
+    override-build: |
+      snapcraftctl build
+      # change the host specifications to be localhost for the snap
+      sed -i \
+        -e s'@Host = \"edgex-device-grove\"@Host = \"localhost\"@' \
+        -e s'@Host = \"edgex-core-data\"@Host = \"localhost\"@' \
+        -e s'@Host = \"edgex-core-metadata\"@Host = \"localhost\"@' \
+        $SNAPCRAFT_PART_INSTALL/res/configuration.toml
+      mkdir -p $SNAPCRAFT_PART_INSTALL/usr/share/doc/edgex-device-grove
+      mkdir -p $SNAPCRAFT_PART_INSTALL/config
+    stage: 
+      - config/*
+      - usr/share/doc/edgex-device-grove/LICENSE
+    prime: 
+      - config/*
+      - usr/share/doc/edgex-device-grove/LICENSE
+  stage-patches:
+    source: scripts
+    plugin: dump
+    prime: [-*]
+    stage: [rpi_patch]
+  libmraa:
+    source: https://github.com/intel-iot-devkit/mraa.git
+    source-commit: d320776
+    plugin: cmake
+    configflags:
+      - -DBUILDSWIG=OFF
+    after: [stage-patches]
+    override-build: |
+      cd $SNAPCRAFT_PART_SRC
+      patch -p1 < $SNAPCRAFT_STAGE/rpi_patch
+      snapcraftctl build
+    prime:
+      - lib/libmraa*
+    # see https://github.com/intel-iot-devkit/mraa/blob/master/docs/building.md#build-dependencies
+    # for this list, but note since we aren't consuming the python or nodejs
+    # bindings and those are slightly complicated for building on bionic, we
+    # just drop those dependencies and ignore the warnings from cmake when 
+    # building libmraa
+    build-packages:
+      - g++
+      - python3-dev
+      - libjson-c-dev
+  tomlc99:
+    source: https://github.com/IOTechSystems/tomlc99.git
+    source-tag: SDK-0.2
+    source-depth: 1
+    plugin: dump
+    # see https://github.com/edgexfoundry/device-sdk-c/blob/edinburgh/scripts/build.sh#L42-L45
+    # for how the c sdk expects these files to be organized
+    organize:
+      toml.c: src/c/toml.c
+      toml.h: src/c/toml.h
+    stage:
+      - src/c
+    prime: [-*]
+  iotech-c-utils:
+    source: https://github.com/IOTechSystems/iotech-c-utils.git
+    source-type: git
+    source-commit: 1a0be9f0ad9733e153daf3b6a1f00839cf59822d
+    plugin: dump
+    # see https://github.com/edgexfoundry/device-sdk-c/blob/edinburgh/scripts/build.sh#L47-L69
+    # for how the c sdk expects these files to be organized
+    override-build: |
+      snapcraftctl build
+      # can't use the organize + stage keywords otherwise it hits a infinite
+      # recursion error trying to move the dir to it's subdir first
+      mkdir -p $SNAPCRAFT_STAGE/src/c/iot
+      cp -r $SNAPCRAFT_PART_SRC/src/c/*.c $SNAPCRAFT_STAGE/src/c/iot
+    stage: 
+      - include/iot/*.h
+      - include/iot/os
+    prime: [-*]
+  device-sdk-c:
+    after: 
+      - tomlc99
+      - iotech-c-utils
+    plugin: cmake
+    configflags: 
+      - -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+      - -DCMAKE_BUILD_TYPE=Release
+    source: https://github.com/edgexfoundry/device-sdk-c.git
+    source-branch: edinburgh
+    source-subdir: src
+    override-build: |
+      # copy all of the dep sources from $SNAPCRAFT_STAGE into the build folder
+      cd $SNAPCRAFT_PART_SRC
+      cp -r $SNAPCRAFT_STAGE/src/c/* src/c/
+      cp -r $SNAPCRAFT_STAGE/include/* include/
+      snapcraftctl build
+    build-packages:
+      - libcurl4-openssl-dev
+      - libmicrohttpd-dev
+      - libyaml-dev
+      - uuid-dev
+      - libcbor-dev
+  edgex-device-grove:
+    source: .
+    plugin: cmake
+    source-subdir: src/c
+    after: 
+      - device-sdk-c
+      - libmraa
+    configflags:
+      - -DCMAKE_BUILD_TYPE=Release
+  pkgs:
+    plugin: nil
+    stage-packages:
+      - libcurl4-openssl-dev
+      - libmicrohttpd-dev
+      - libyaml-dev
+      - uuid-runtime
+      - libcbor0
+      - curl
