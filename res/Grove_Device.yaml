@@ -2,7 +2,7 @@ name: "Grove_Device"
 manufacturer: "Seeed"
 model: ""
 labels:
-- "Grove LED, Grove Button, Grove Buzzer, Grove LCD, Grove LightSensor, Grove Relay, Grove RotarySensor, Grove SoundSensor"
+- "Grove LED, Grove Button, Grove Buzzer, Grove LCD, Grove LightSensor, Grove Relay, Grove RotarySensor, Grove SoundSensor, Grove BME680Sensor"
 description: "Grove Device to Read/Write sensors connected to GrovePI."
 
 deviceResources:
@@ -93,7 +93,7 @@ deviceResources:
     { Pin_Num: "A0", Interface: "AIO", Type: "IN" }
   properties:
     value:
-      { type: "Float32", readWrite: "RW", minimum: "0", maximum: "", defaultValue: "0" }
+      { type: "Float32", floatEncoding: "eNotation", readWrite: "RW", minimum: "0", maximum: "", defaultValue: "0" }
     units:
       { type: "String", readWrite: "R", defaultValue: "lumen" }
 - name: SoundIntensity
@@ -102,7 +102,7 @@ deviceResources:
     { Pin_Num: "A1", Interface: "AIO", Type: "IN", normalize: "false"}
   properties:
     value:
-      { type: "Float32", readWrite: "RW", minimum: "0", maximum: "5", scale: "0.0049", defaultValue: "0" }
+      { type: "Float32", floatEncoding: "eNotation", readWrite: "RW", minimum: "0", maximum: "5", scale: "0.0049", defaultValue: "0" }
     units:
       { type: "String", readWrite: "R", defaultValue: "Vbiased" }
 - name: RotaryAngle
@@ -111,7 +111,7 @@ deviceResources:
     { Pin_Num: "A2", Interface: "AIO", Type: "IN", normalize: "false" }
   properties:
     value:
-      { type: "Float32", readWrite: "RW", minimum: "0", maximum: "300", scale: "0.2933", defaultValue: "0" }
+      { type: "Float32", floatEncoding: "eNotation", readWrite: "RW", minimum: "0", maximum: "300", scale: "0.2933", defaultValue: "0" }
     units:
       { type: "String", readWrite: "R", defaultValue: "Degree" }
 - name: RotaryVoltage
@@ -120,12 +120,37 @@ deviceResources:
     { Pin_Num: "A2", Interface: "AIO", Type: "IN", normalize: "false"}
   properties:
     value:
-      { type: "Float32", readWrite: "RW", minimum: "0", maximum: "5", scale: "0.0049", defaultValue: "0" }
+      { type: "Float32", floatEncoding: "eNotation", readWrite: "RW", minimum: "0", maximum: "5", scale: "0.0049", defaultValue: "0" }
     units:
       { type: "String", readWrite: "R", defaultValue: "V" }
-
-
-resources:
+- name: Temperature
+  description: "Read Temperature from BME680"
+  attributes:
+    { Pin_Num: "I2C-1", Interface: "I2C", Type: "BME680"}
+  properties:
+    value:
+      { type: "Float32", floatEncoding: "eNotation", readWrite: "RW", minimum: "-40", maximum: "85", defaultValue: "0" }
+    units:
+      { type: "String", readWrite: "R", defaultValue: "°C" }
+- name: Pressure
+  description: "Read Pressure from BME680"
+  attributes:
+    { Pin_Num: "I2C-1", Interface: "I2C", Type: "BME680", normalize: "false"}
+  properties:
+    value:
+      { type: "Float32", floatEncoding: "eNotation", readWrite: "RW", minimum: "300", maximum: "1100", scale: "0.01", defaultValue: "0" }
+    units:
+      { type: "String", readWrite: "R", defaultValue: "hPa" }
+- name: Humidity
+  description: "Read Humidity from BME680"
+  attributes:
+    { Pin_Num: "I2C-1", Interface: "I2C", Type: "BME680"}
+  properties:
+    value:
+      { type: "Float32", floatEncoding: "eNotation", readWrite: "RW", minimum: "10", maximum: "90", defaultValue: "0" }
+    units:
+      { type: "String", readWrite: "R", defaultValue: "rH" }
+deviceCommands:
 - name: Get_ButtonState
   get:
   - { operation: "get", object: "ButtonState", property: "value", parameter: "ButtonState" }
@@ -139,6 +164,11 @@ resources:
 - name: Get_SoundIntensity
   get:
   - { operation: "get", object: "SoundIntensity", property: "value", parameter: "SoundIntensity" }
+- name: Get_TempPressHumidity
+  get:
+  - { index: "1", operation: "get", object: "Temperature", property: "value", parameter: "Temperature" }
+  - { index: "2", operation: "get", object: "Pressure", property: "value", parameter: "Pressure" }
+  - { index: "3", operation: "get", object: "Humidity", property: "value", parameter: "Humidity" }
 - name: Set_GreenLed
   set:
   - { operation: "set", object: "Green-LED", property: "value", parameter: "Green-LED" }
@@ -160,7 +190,7 @@ resources:
   set:
   - { operation: "set", object: "Grove-Relay", property: "value", parameter: "Grove-Relay" }
 
-commands:
+coreCommands:
 - name: Get_ButtonState
   get:
     path: "/api/v1/device/{deviceId}/Get_ButtonState"
@@ -201,6 +231,17 @@ commands:
     - code: "200"
       description: "valid and accepted"
       expectedValues: ["RotaryAngle", "RotaryVoltage"]
+    - code: "503"
+      description: "service unavailable"
+      expectedValues: []
+
+- name: Get_TempPressHumidity
+  get:
+    path: "/api/v1/device/{deviceId}/Get_TempPressHumidity"
+    responses:
+    - code: "200"
+      description: "valid and accepted"
+      expectedValues: ["Temperature", "Pressure", "Humidity"]
     - code: "503"
       description: "service unavailable"
       expectedValues: []
@@ -294,3 +335,4 @@ commands:
     - code: "503"
       description: "service unavailable"
       expectedValues: []
+

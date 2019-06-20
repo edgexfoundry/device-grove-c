@@ -15,7 +15,9 @@
 #include <mraa/gpio.h>
 #include <mraa/aio.h>
 #include <mraa/i2c.h>
+#include "edgex/edgex.h"
 #include "edgex/devsdk.h"
+#include "edgex/device-mgmt.h"
 
 #if defined (__cplusplus)
 extern "C" {
@@ -35,14 +37,16 @@ extern "C" {
 #define GROVE_ADC_REF 5
 
 #define GROVE_SVC "Device-Grove"
+#define VERSION "1.0.1"
 
 typedef enum
 {
-  GROVE_GPIO    = 0,
-  GROVE_PWM     = 1,
-  GROVE_AIO     = 2,
-  GROVE_I2C     = 3,
-  GROVE_SERIAL  = 4
+  GROVE_GPIO = 0,
+  GROVE_PWM = 1,
+  GROVE_AIO = 2,
+  GROVE_I2C = 3,
+  GROVE_SERIAL = 4,
+  GROVE_UNKNOWN_INTF = -1
 } grove_interface_type_t;
 
 typedef struct
@@ -62,14 +66,15 @@ typedef struct
 
 typedef struct
 {
-  grove_interface_type_t pin_type;
+  grove_interface_type_t intf_type;
+  char *pin_type;
   char *pin_number;
   void *dev_ctxt;
 } grove_dev_ctxt_t;
 
 typedef struct
 {
-  iot_logging_client *lc;
+  iot_logger_t *lc;
   edgex_device_service *svc;
   grove_dev_ctxt_t *dev[GROVE_NO_PORTS];
   pthread_mutex_t mutex;
