@@ -1,0 +1,4 @@
+Changes for Edinburgh release:
+
+- Device service updated to use C SDK (v1.0.0)
+- Added support to read temperature, humidity and pressure from grove Bosch Sensortec BME680

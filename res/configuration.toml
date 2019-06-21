@@ -28,34 +28,30 @@
   ProfilesDir = ""
   SendReadingsOnChanged = true
 
+[Driver]
+  BME680_Temp_Offset = -1.0
+
 [Logging]
   RemoteURL = ""
   File = "-"
-
-[[Schedules]]
-  Name = "Schedule_Grove"
-  Frequency = "PT2S"
-
-[[ScheduleEvents]]
-  Name = "RotarySensorMeasurements"
-  Schedule = "Schedule_Grove"
-  Path = "/api/v1/device/all/Get_RotarySensorMeasurements"
-
-[[ScheduleEvents]]
-  Name = "LightIntensity"
-  Schedule = "Schedule_Grove"
-  Path = "/api/v1/device/all/Get_LightIntensity"
-
-[[ScheduleEvents]]
-  Name = "SoundIntensity"
-  Schedule = "Schedule_Grove"
-  Path = "/api/v1/device/all/Get_SoundIntensity"
 
 [[DeviceList]]
   Name = "GroveDevice"
   Profile = "Grove_Device"
   Description = "Grove Device to Read/Write sensors connected to GrovePI"
-  Labels = [ "Grove LED, Grove Button, Grove Buzzer, Grove LCD, Grove LightSensor, Grove Relay, Grove RotarySensor, Grove SoundSensor" ]
-  [DeviceList.Addressable]
-    Address = "/api/v1/device/GroveDevice"
-
+  Labels = [ "Grove LED, Grove Button, Grove Buzzer, Grove LCD, Grove LightSensor, Grove Relay, Grove RotarySensor, Grove SoundSensor, Grove BME680Sensor" ]
+  [DeviceList.Protocols]
+    [DeviceList.Protocols.Other]
+      Address = "/api/v1/device/GroveDevice"
+  [[DeviceList.AutoEvents]]
+    Resource = "Get_RotarySensorMeasurements"
+    OnChange = false
+    Frequency = "2s"
+  [[DeviceList.AutoEvents]]
+    Resource = "Get_LightIntensity"
+    OnChange = false
+    Frequency = "2s"
+   [[DeviceList.AutoEvents]]
+    Resource = "Get_SoundIntensity"
+    OnChange = false
+    Frequency = "2s"
