@@ -21,4 +21,7 @@ if [ ! -f "$SNAP_DATA/config/edgex-device-grove/res/configuration.toml" ]; then
         "$SNAP_DATA/config/edgex-device-grove/res/configuration.toml"
 fi
 
-cp "$SNAP/config/edgex-device-grove/res/profiles/Grove_Device.yaml" "$SNAP_DATA/config/edgex-device-grove/res/profiles/Grove_Device.yaml"
+mkdir -p $SNAP_DATA/config/edgex-device-grove/res/profiles
+if [ ! -f "$SNAP_DATA/config/edgex-device-grove/res/profiles/Grove_Device.yaml" ]; then
+    cp "$SNAP/config/edgex-device-grove/res/profiles/Grove_Device.yaml" "$SNAP_DATA/config/edgex-device-grove/res/profiles/Grove_Device.yaml"
+fi
