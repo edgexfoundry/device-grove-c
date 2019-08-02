@@ -47,6 +47,7 @@ parts:
         -e s'@Host = \"edgex-device-grove\"@Host = \"localhost\"@' \
         -e s'@Host = \"edgex-core-data\"@Host = \"localhost\"@' \
         -e s'@Host = \"edgex-core-metadata\"@Host = \"localhost\"@' \
+        -e s'@ProfilesDir = \"\"@ProfilesDir = \"\$SNAP_DATA/config/edgex-device-grove/res/profiles\"@' \
         $SNAPCRAFT_PART_INSTALL/res/configuration.toml
       mkdir -p $SNAPCRAFT_PART_INSTALL/usr/share/doc/edgex-device-grove
       mkdir -p $SNAPCRAFT_PART_INSTALL/config
