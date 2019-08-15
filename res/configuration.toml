@@ -1,6 +1,6 @@
 [Service]
   Host = "edgex-device-grove"
-  Port = 49991
+  Port = 49992
   ConnectRetries = 3
   HealthCheck = ""
   StartupMsg = "device Grove PI started"
