@@ -34,9 +34,9 @@ then
   make
   make install
 
-  wget https://github.com/edgexfoundry/device-sdk-c/archive/edinburgh.tar.gz
-  tar -xzf edinburgh.tar.gz
-  cd device-sdk-c-edinburgh
+  wget https://github.com/edgexfoundry/device-sdk-c/archive/fuji.tar.gz
+  tar -xzf fuji.tar.gz
+  cd device-sdk-c-fuji
   ./scripts/build.sh
   cp -rf include/* /usr/include/
   cp build/release/c/libcsdk.so /usr/lib/

@@ -29,7 +29,7 @@
   SendReadingsOnChanged = true
 
 [Driver]
-  BME680_Temp_Offset = -1.0
+  BME680_Temp_Offset = "-1.0"
 
 [Logging]
   RemoteURL = ""

@@ -1,3 +1,7 @@
+Changes for Fuji release:
+
+- Device service updated to use C SDK (v1.1.0)
+
 Changes for Edinburgh release:
 
 - Device service updated to use C SDK (v1.0.0)

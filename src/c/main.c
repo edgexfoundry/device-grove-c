@@ -23,16 +23,6 @@ static void grove_inthandler (int i)
   sem_post (&grove_sem);
 }
 
-static void usage (void)
-{
-  printf ("Options: \n");
-  printf ("   -h, --help            : Show this text\n");
-  printf ("   --registry=<URL>      : Use the registry service\n");
-  printf ("   --profile=<name>      : Set the profile name\n");
-  printf ("   --confdir=<dir>       : Set the configuration directory\n");
-  printf ("   --name=<name>         : Set the service name\n");
-}
-
 static grove_attributes_t *get_groveattributes (const edgex_nvpairs *device_attr)
 {
   grove_attributes_t *grove_attr = (grove_attributes_t *) malloc (sizeof (grove_attributes_t));
@@ -291,7 +281,7 @@ static mraa_result_t grove_i2c_init (grove_pidriver_t *impln, char *pin, char *t
   else
   {
     status = MRAA_ERROR_UNSPECIFIED;
-    iot_log_warning (impln->lc, "Invalid Type, Ignore I2C initialization");
+    iot_log_warn (impln->lc, "Invalid Type, Ignore I2C initialization");
   }
   return status;
 }
@@ -732,53 +722,35 @@ static void grove_stop (void *impl, bool force)
 
 int main (int argc, char *argv[])
 {
-  const char *profile = "";
-  char *confdir = "";
-  char *regURL = NULL;
-  char *service_name = GROVE_SVC;
-  edgex_error err;
+  edgex_device_svcparams params = { GROVE_SVC, "", NULL, "" };
 
   grove_pidriver_t *implObject = malloc (sizeof (grove_pidriver_t));
   memset (implObject, 0, sizeof (grove_pidriver_t));
   sem_init (&grove_sem, 0, 0);
+
+  if (!edgex_device_service_processparams (&argc, argv, &params))
+  {
+    return 0;
+  }
 
   int n = 1;
   while (n < argc)
   {
     if (strcmp (argv[n], "-h") == 0 || strcmp (argv[n], "--help") == 0)
     {
-      usage ();
+      printf ("Options:\n");
+      printf ("  -h, --help\t\t: Show this text\n");
+      edgex_device_service_usage ();
       return 0;
     }
-    if (strstr (argv[n], "--registry=") != NULL)
+    else
     {
-      regURL = argv[n] + strlen ("--registry=");
-      n++;
-      continue;
+      printf ("%s: Unrecognized option %s\n", argv[0], argv[n]);
+      return 0;
     }
-    if (strstr (argv[n], "--profile=") != NULL)
-    {
-      profile = argv[n] + strlen ("--profile=");
-      n++;
-      continue;
-    }
-    if (strstr (argv[n], "--confdir=") != NULL)
-    {
-      confdir = argv[n] + strlen ("--confdir=");
-      n++;
-      continue;
-    }
-    if (strstr (argv[n], "--name=") != NULL)
-    {
-      service_name = argv[n] + strlen ("--name=");
-      n++;
-      continue;
-    }
-    printf ("Unknown option %s\n", argv[n]);
-    usage ();
-    return 0;
   }
 
+  edgex_error err;
   err.code = 0;
 
   edgex_device_callbacks myImpls =
@@ -791,12 +763,12 @@ int main (int argc, char *argv[])
       grove_stop
     };
 
-  edgex_device_service *grove_service = edgex_device_service_new (service_name, VERSION, implObject, myImpls, &err);
+  edgex_device_service *grove_service = edgex_device_service_new (params.svcname, GROVE_VERSION, implObject, myImpls, &err);
   GROVE_ERR_CHECK (err);
 
   implObject->svc = grove_service;
   err.code = 0;
-  edgex_device_service_start (grove_service, regURL, profile, confdir, &err);
+  edgex_device_service_start (grove_service, params.regURL, params.profile, params.confdir, &err);
   GROVE_ERR_CHECK (err);
 
   printf ("\nRunning - press ctrl-c to exit\n");
@@ -810,7 +782,9 @@ int main (int argc, char *argv[])
   edgex_device_service_stop (grove_service, true, &err);
   GROVE_ERR_CHECK (err);
 
-  free (implObject);
   sem_destroy (&grove_sem);
+  edgex_device_service_free (grove_service);
+  free (implObject);
+
   return 0;
 }
