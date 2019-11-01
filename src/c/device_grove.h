@@ -37,7 +37,6 @@ extern "C" {
 #define GROVE_ADC_REF 5
 
 #define GROVE_SVC "Device-Grove"
-#define GROVE_VERSION "1.1.0"
 
 typedef enum
 {
