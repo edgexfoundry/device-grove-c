@@ -40,6 +40,8 @@ then
   ./scripts/build.sh
   cp -rf include/* /usr/include/
   cp build/release/c/libcsdk.so /usr/lib/
+  mkdir -p /usr/share/doc/edgex-csdk
+  cp Attribution.txt /usr/share/doc/edgex-csdk
 fi
   rm -rf /device-grove/deps
 fi
