@@ -19,6 +19,7 @@ COPY --from=builder /device-grove/build/release/device-grove /.
 COPY --from=builder /usr/lib/libcsdk.so /usr/lib
 COPY --from=builder /usr/include/edgex /usr/include/edgex
 COPY --from=builder /usr/include/iot /usr/include/iot
+COPY --from=builder /usr/share/doc/edgex-csdk /usr/share/doc/edgex-csdk
 COPY --from=builder /usr/local/include/mraa /usr/local/include/
 COPY --from=builder /usr/local/include/mraa.h /usr/local/include/
 COPY --from=builder /usr/local/lib/libmraa.so* /usr/local/lib/
