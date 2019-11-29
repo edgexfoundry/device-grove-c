@@ -722,7 +722,7 @@ static void grove_stop (void *impl, bool force)
 
 int main (int argc, char *argv[])
 {
-  edgex_device_svcparams params = { GROVE_SVC, "", NULL, "" };
+  edgex_device_svcparams params = { GROVE_SVC, NULL, NULL, NULL };
 
   grove_pidriver_t *implObject = malloc (sizeof (grove_pidriver_t));
   memset (implObject, 0, sizeof (grove_pidriver_t));
