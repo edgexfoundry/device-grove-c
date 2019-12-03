@@ -4,6 +4,7 @@ RUN apk add --update --no-cache build-base git gcc cmake make linux-headers yaml
 
 COPY scripts /device-grove/scripts
 COPY src /device-grove/src/
+COPY VERSION /device-grove
 RUN mkdir -p /device-grove/build
 
 WORKDIR /device-grove
@@ -23,7 +24,6 @@ COPY --from=builder /usr/local/include/mraa.h /usr/local/include/
 COPY --from=builder /usr/local/lib/libmraa.so* /usr/local/lib/
 COPY --from=builder /usr/local/lib64/libcbor.so* /usr/local/lib64/
 
-COPY VERSION /.
 COPY LICENSE /.
 COPY Attribution.txt /.
 COPY res /res
