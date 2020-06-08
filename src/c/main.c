@@ -23,7 +23,7 @@ static void grove_inthandler (int i)
   sem_post (&grove_sem);
 }
 
-static grove_attributes_t *get_groveattributes (const edgex_nvpairs *device_attr)
+static grove_attributes_t *get_groveattributes (const devsdk_nvpairs *device_attr)
 {
   grove_attributes_t *grove_attr = (grove_attributes_t *) malloc (sizeof (grove_attributes_t));
   for (; device_attr != NULL; device_attr = device_attr->next)
@@ -286,7 +286,7 @@ static mraa_result_t grove_i2c_init (grove_pidriver_t *impln, char *pin, char *t
   return status;
 }
 
-static bool grove_init (void *impl, struct iot_logger_t *lc, const edgex_nvpairs *config)
+static bool grove_init (void *impl, struct iot_logger_t *lc, const iot_data_t *config)
 {
   mraa_result_t status = MRAA_SUCCESS;
   grove_pidriver_t *impln = (grove_pidriver_t *) impl;
@@ -306,17 +306,22 @@ static bool grove_init (void *impl, struct iot_logger_t *lc, const edgex_nvpairs
 
     mraa_add_subplatform (MRAA_GROVEPI, "0");
 
-    /* read Driver specific configuration: BME680: Require temp_offset to be set to fine tune measurements */
-    for (; config != NULL; config = config->next)
+    if (config)
     {
-      if (strcmp (config->name, "BME680_Temp_Offset") == 0)
+      iot_data_map_iter_t iter;
+      iot_data_map_iter (config, &iter);
+
+      while (iot_data_map_iter_next (&iter))
       {
-        BME680_Temp_Offset = (strtof (config->value, NULL));
+        if (strcmp (iot_data_map_iter_string_key (&iter), "BME680_Temp_Offset") == 0)
+        {
+          BME680_Temp_Offset = (strtof (iot_data_map_iter_string_value (&iter), NULL));
+        }
       }
     }
 
     /* read the attributes from the device profile to initialize the driver */
-    profiles = edgex_device_profiles (impln->svc);
+    profiles = edgex_profiles (impln->svc);
 
     while (profiles)
     {
@@ -324,7 +329,7 @@ static bool grove_init (void *impl, struct iot_logger_t *lc, const edgex_nvpairs
       grove_attributes_t *grove_attr = NULL;
       for (; dev_res != NULL; dev_res = dev_res->next)
       {
-        edgex_nvpairs *dev_attr = dev_res->attributes;
+        devsdk_nvpairs *dev_attr = dev_res->attributes;
         assert (dev_attr != NULL);
 
         grove_attr = get_groveattributes (dev_attr);
@@ -372,16 +377,18 @@ static bool grove_gethandler
   (
     void *impl,
     const char *devname,
-    const edgex_protocols *protocols,
+    const devsdk_protocols *protocols,
     uint32_t nreadings,
-    const edgex_device_commandrequest *requests,
-    edgex_device_commandresult *readings
+    const devsdk_commandrequest *requests,
+    devsdk_commandresult *readings,
+    const devsdk_nvpairs *qparams,
+    iot_data_t **exception
   )
 {
   grove_pidriver_t *impln = (grove_pidriver_t *) impl;
 
   pthread_mutex_lock (&impln->mutex);
-  const edgex_nvpairs *dev_attr = requests->attributes;
+  const devsdk_nvpairs *dev_attr = requests->attributes;
   assert (dev_attr != NULL);
   grove_attributes_t *grove_attr = get_groveattributes (dev_attr);
   bool ret_status = true;
@@ -404,10 +411,9 @@ static bool grove_gethandler
         ret_status = false;
       }
         /* Grove Button */
-      else if (requests->type == Uint8)
+      else if (iot_typecode_type (requests->type) == IOT_DATA_UINT8)
       {
-        readings->value.ui8_result = (uint8_t) read_value;
-        readings->type = Uint8;
+        readings->value = iot_data_alloc_ui8 (read_value);
       }
       else
       {
@@ -433,26 +439,25 @@ static bool grove_gethandler
         if (strcmp (requests->resname, "SoundIntensity") == 0)
         {
           assert (nreadings == 1);
-          assert (requests->type == Float32);
-          readings->type = Float32;
+          assert (iot_typecode_type (requests->type) == IOT_DATA_FLOAT32);
+
+          float sound_intensity = read_value;
           if (grove_attr->normalize)
           {
-            readings->value.f32_result = (float) read_value * GROVE_ADC_REF / range;
+            sound_intensity = read_value * GROVE_ADC_REF / range;
           }
-          else
-          {
-            readings->value.f32_result = (float) read_value;
-          }
+          readings->value = iot_data_alloc_f32 (sound_intensity);
         }
         else if (strcmp (requests->resname, "LightIntensity") == 0)
         {
           assert (nreadings == 1);
-          assert (requests->type == Float32);
+          assert (iot_typecode_type (requests->type) == IOT_DATA_FLOAT32);
+      
           /* Ref: https://github.com/intel-iot-devkit/upm/src/light/light.c */
-          readings->value.f32_result = (float) (10000.0 /
+          float light_intensity = (float) (10000.0 /
                                                 powf ((((float) (range) - read_value) * 10.0 / read_value) * 15.0,
                                                       4.0 / 3.0));
-          readings->type = Float32;
+          readings->value = iot_data_alloc_f32 (light_intensity);
         }
         else
         {
@@ -460,31 +465,26 @@ static bool grove_gethandler
           grove_attributes_t *rotarysensor_attr = NULL;
           for (int index = 0; index < nreadings; index++)
           {
-            readings[index].type = Float32;
             /* Get attribute for each device object to apply scale if applicable */
             rotarysensor_attr = get_groveattributes (requests[index].attributes);
 
             if (strcmp (requests[index].resname, "RotaryAngle") == 0)
             {
+              float rotaryangle = read_value;
               if (rotarysensor_attr->normalize)
               {
-                readings[index].value.f32_result = read_value * (float) GROVE_ROTARY_MAX_ANGLE / range;
+                rotaryangle = read_value * (float) GROVE_ROTARY_MAX_ANGLE / range;
               }
-              else
-              {
-                readings[index].value.f32_result = read_value;
-              }
+              readings[index].value = iot_data_alloc_f32 (rotaryangle);
             }
             else if (strcmp (requests[index].resname, "RotaryVoltage") == 0)
             {
+              float rotaryvoltage = read_value;
               if (rotarysensor_attr->normalize)
               {
-                readings[index].value.f32_result = read_value * (float) GROVE_ADC_REF / range;
+                rotaryvoltage = read_value * (float) GROVE_ADC_REF / range;
               }
-              else
-              {
-                readings[index].value.f32_result = read_value;
-              }
+              readings[index].value = iot_data_alloc_f32 (rotaryvoltage);
             }
             free (rotarysensor_attr);
           }
@@ -510,31 +510,32 @@ static bool grove_gethandler
           /* Get attribute for each device object to apply scale if applicable */
           bme_attr = get_groveattributes (requests[index].attributes);
 
-          readings[index].type = Float32;
+          float bme_data = 0.0;
 
           if (strcmp (requests[index].resname, "Temperature") == 0)
           {
-            readings[index].value.f32_result = read_data.temperature;
+            bme_data = read_data.temperature;
           }
           else if (strcmp (requests[index].resname, "Pressure") == 0)
           {
             if (bme_attr->normalize)
             {
-              readings[index].value.f32_result = (float) (read_data.pressure / hPA_FACTOR);
+              bme_data = (float) (read_data.pressure / hPA_FACTOR);
             }
             else
             {
-              readings[index].value.f32_result = read_data.pressure;
+              bme_data = read_data.pressure;
             }
           }
           else if (strcmp (requests[index].resname, "Humidity") == 0)
           {
-            readings[index].value.f32_result = read_data.humidity;
+            bme_data = read_data.humidity;
           }
           else
           {
             iot_log_error (impln->lc, "Undefined %s device resource for BME680", requests[index].resname);
           }
+          readings[index].value = iot_data_alloc_f32 (bme_data);
           free (bme_attr);
           bme_attr = NULL;
         }
@@ -556,10 +557,11 @@ static bool grove_puthandler
   (
     void *impl,
     const char *devname,
-    const edgex_protocols *protocols,
+    const devsdk_protocols *protocols,
     uint32_t nvalues,
-    const edgex_device_commandrequest *requests,
-    const edgex_device_commandresult *readings
+    const devsdk_commandrequest *requests,
+    const iot_data_t *values[],
+    iot_data_t **exception
   )
 {
   mraa_result_t status = MRAA_SUCCESS;
@@ -567,7 +569,7 @@ static bool grove_puthandler
 
   pthread_mutex_lock (&impln->mutex);
   /* Get the device context */
-  const edgex_nvpairs *dev_attr = requests[0].attributes;
+  const devsdk_nvpairs *dev_attr = requests[0].attributes;
   assert (dev_attr != NULL);
   grove_attributes_t *grove_attr = get_groveattributes (dev_attr);
 
@@ -578,10 +580,10 @@ static bool grove_puthandler
     {
       mraa_gpio_context gpio_dev = (mraa_gpio_context) mraa_devctxt->dev_ctxt;
 
-      assert (requests->type == Bool);
+      assert (iot_typecode_type(requests->type) == IOT_DATA_BOOL);
       assert (nvalues == 1);
 
-      status = mraa_gpio_write (gpio_dev, readings[--nvalues].value.bool_result);
+      status = mraa_gpio_write (gpio_dev, iot_data_bool (values[--nvalues]));
       if (status != MRAA_SUCCESS)
       {
         iot_log_error (impln->lc, "gpio write failure = %d\n", status);
@@ -602,15 +604,15 @@ static bool grove_puthandler
       {
         if (strcmp (requests[index].resname, "Display-String") == 0)
         {
-          display_string = readings[index].value.string_result;
+          display_string = (char *)iot_data_string (values[index]);
         }
         else if (strcmp (requests[index].resname, "Row") == 0)
         {
-          row = (readings[index]).value.ui8_result;
+          row = iot_data_ui8 (values[index]);
         }
         else if (strcmp (requests[index].resname, "Column") == 0)
         {
-          column = (readings[index]).value.ui8_result;
+          column = iot_data_ui8 (values[index]);
         }
       }
       status = grove_lcd_set_cursor (mraa_i2cdev, row, column);
@@ -636,12 +638,6 @@ static bool grove_puthandler
   free (grove_attr);
   pthread_mutex_unlock (&impln->mutex);
   return (status == MRAA_SUCCESS);
-}
-
-static bool grove_disconnect (void *impl, edgex_protocols *device)
-{
-  free (impl);
-  return true;
 }
 
 static void grove_stop (void *impl, bool force)
@@ -722,16 +718,27 @@ static void grove_stop (void *impl, bool force)
 
 int main (int argc, char *argv[])
 {
-  edgex_device_svcparams params = { GROVE_SVC, NULL, NULL, NULL };
-
   grove_pidriver_t *implObject = malloc (sizeof (grove_pidriver_t));
   memset (implObject, 0, sizeof (grove_pidriver_t));
   sem_init (&grove_sem, 0, 0);
 
-  if (!edgex_device_service_processparams (&argc, argv, &params))
+  devsdk_error err;
+  err.code = 0;
+
+  /* Device Callbacks */
+  devsdk_callbacks myImpls = 
   {
-    return 0;
-  }
+      grove_init,
+      NULL,
+      grove_gethandler,
+      grove_puthandler,
+      grove_stop
+   };
+
+   /* Initalise a device grove service */
+  devsdk_service_t *grove_service = devsdk_service_new
+    (GROVE_SVC, GROVE_VERSION, implObject, myImpls, &argc, argv, &err);
+  GROVE_ERR_CHECK (err);
 
   int n = 1;
   while (n < argc)
@@ -740,7 +747,7 @@ int main (int argc, char *argv[])
     {
       printf ("Options:\n");
       printf ("  -h, --help\t\t: Show this text\n");
-      edgex_device_service_usage ();
+      devsdk_usage ();
       return 0;
     }
     else
@@ -750,25 +757,9 @@ int main (int argc, char *argv[])
     }
   }
 
-  edgex_error err;
-  err.code = 0;
-
-  edgex_device_callbacks myImpls =
-    {
-      grove_init,
-      NULL,
-      grove_gethandler,
-      grove_puthandler,
-      grove_disconnect,
-      grove_stop
-    };
-
-  edgex_device_service *grove_service = edgex_device_service_new (params.svcname, GROVE_VERSION, implObject, myImpls, &err);
-  GROVE_ERR_CHECK (err);
-
   implObject->svc = grove_service;
-  err.code = 0;
-  edgex_device_service_start (grove_service, params.regURL, params.profile, params.confdir, &err);
+  /* Start the device service*/
+  devsdk_service_start (grove_service, &err);
   GROVE_ERR_CHECK (err);
 
   printf ("\nRunning - press ctrl-c to exit\n");
@@ -778,12 +769,11 @@ int main (int argc, char *argv[])
   // wait until the service is interrupted 
   sem_wait (&grove_sem);
 
-  err.code = 0;
-  edgex_device_service_stop (grove_service, true, &err);
+  devsdk_service_stop (grove_service, true, &err);
   GROVE_ERR_CHECK (err);
 
   sem_destroy (&grove_sem);
-  edgex_device_service_free (grove_service);
+  devsdk_service_free (grove_service);
   free (implObject);
 
   return 0;
