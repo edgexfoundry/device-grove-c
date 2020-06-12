@@ -34,9 +34,9 @@ then
   make
   make install
 
-  wget https://github.com/edgexfoundry/device-sdk-c/archive/fuji.tar.gz
-  tar -xzf fuji.tar.gz
-  cd device-sdk-c-fuji
+  wget https://github.com/edgexfoundry/device-sdk-c/archive/v1.2.1.zip
+  unzip v1.2.1.zip
+  cd device-sdk-c-1.2.1
   ./scripts/build.sh
   cp -rf include/* /usr/include/
   cp build/release/c/libcsdk.so /usr/lib/
