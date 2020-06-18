@@ -15,6 +15,8 @@
 #include "grove_lcd.h"
 #include "grove_bme680.h"
 
+#define GROVE_ERR_BUFSZ 1024
+
 static sem_t grove_sem;
 static float BME680_Temp_Offset = 0.0;
 
@@ -294,82 +296,67 @@ static bool grove_init (void *impl, struct iot_logger_t *lc, const iot_data_t *c
   pthread_mutex_init (&impln->mutex, NULL);
 
   iot_log_debug (lc, "driver initialization");
+  edgex_deviceprofile *profiles = NULL;
+
+  status = mraa_init ();
+  if (status != MRAA_SUCCESS)
   {
-    edgex_deviceprofile *profiles = NULL;
+    iot_log_error (lc, "GrovePI driver initialization failed");
+    return false;
+  }
 
-    status = mraa_init ();
-    if (status != MRAA_SUCCESS)
+  mraa_add_subplatform (MRAA_GROVEPI, "0");
+
+  BME680_Temp_Offset = (config) ? strtof (iot_data_string_map_get_string (config, "BME680_Temp_Offset"), NULL) : 0.0;
+
+  /* read the attributes from the device profile to initialize the driver */
+  profiles = edgex_profiles (impln->svc);
+
+  while (profiles)
+  {
+    edgex_deviceresource *dev_res = profiles->device_resources;
+    grove_attributes_t *grove_attr = NULL;
+    for (; dev_res != NULL; dev_res = dev_res->next)
     {
-      iot_log_error (lc, "GrovePI driver initialization failed");
-      return false;
-    }
+      devsdk_nvpairs *dev_attr = dev_res->attributes;
+      assert (dev_attr != NULL);
 
-    mraa_add_subplatform (MRAA_GROVEPI, "0");
+      grove_attr = get_groveattributes (dev_attr);
 
-    if (config)
-    {
-      iot_data_map_iter_t iter;
-      iot_data_map_iter (config, &iter);
-
-      while (iot_data_map_iter_next (&iter))
+      grove_dev_ctxt_t *dev = grove_device_lookup (impln, grove_attr->pin_no);
+      if (dev != NULL)
       {
-        if (strcmp (iot_data_map_iter_string_key (&iter), "BME680_Temp_Offset") == 0)
-        {
-          BME680_Temp_Offset = (strtof (iot_data_map_iter_string_value (&iter), NULL));
-        }
+        /* device is initialized */
+        continue;
       }
-    }
-
-    /* read the attributes from the device profile to initialize the driver */
-    profiles = edgex_profiles (impln->svc);
-
-    while (profiles)
-    {
-      edgex_deviceresource *dev_res = profiles->device_resources;
-      grove_attributes_t *grove_attr = NULL;
-      for (; dev_res != NULL; dev_res = dev_res->next)
+      else
       {
-        devsdk_nvpairs *dev_attr = dev_res->attributes;
-        assert (dev_attr != NULL);
-
-        grove_attr = get_groveattributes (dev_attr);
-
-        grove_dev_ctxt_t *dev = grove_device_lookup (impln, grove_attr->pin_no);
-        if (dev != NULL)
+        if (strcmp (grove_attr->pin_type, "GPIO") == 0)
         {
-          /* device is initialized */
-          continue;
+          status = grove_gpio_init (impln, grove_attr->pin_no, grove_attr->type);
+          assert (!status);
+        }
+        else if (strcmp (grove_attr->pin_type, "AIO") == 0)
+        {
+          status = grove_aio_init (impln, grove_attr->pin_no, grove_attr->type);
+          assert (!status);
+        }
+        else if (strcmp (grove_attr->pin_type, "I2C") == 0)
+        {
+          status = grove_i2c_init (impln, grove_attr->pin_no, grove_attr->type);
+          assert (!status);
         }
         else
         {
-          if (strcmp (grove_attr->pin_type, "GPIO") == 0)
-          {
-            status = grove_gpio_init (impln, grove_attr->pin_no, grove_attr->type);
-            assert (!status);
-          }
-          else if (strcmp (grove_attr->pin_type, "AIO") == 0)
-          {
-            status = grove_aio_init (impln, grove_attr->pin_no, grove_attr->type);
-            assert (!status);
-          }
-          else if (strcmp (grove_attr->pin_type, "I2C") == 0)
-          {
-            status = grove_i2c_init (impln, grove_attr->pin_no, grove_attr->type);
-            assert (!status);
-          }
-          else
-          {
-            /* PWM & Serial interface support not implemented */
-            status = MRAA_ERROR_FEATURE_NOT_IMPLEMENTED;
-          }
+          /* PWM & Serial interface support not implemented */
+          status = MRAA_ERROR_FEATURE_NOT_IMPLEMENTED;
         }
-        free (grove_attr);
       }
-      profiles = profiles->next;
+      free (grove_attr);
     }
-
+    profiles = profiles->next;
   }
-
+ 
   return (status == MRAA_SUCCESS);
 }
 
@@ -388,6 +375,7 @@ static bool grove_gethandler
   grove_pidriver_t *impln = (grove_pidriver_t *) impl;
 
   pthread_mutex_lock (&impln->mutex);
+  char * buff = malloc (GROVE_ERR_BUFSZ);
   const devsdk_nvpairs *dev_attr = requests->attributes;
   assert (dev_attr != NULL);
   grove_attributes_t *grove_attr = get_groveattributes (dev_attr);
@@ -407,7 +395,7 @@ static bool grove_gethandler
       if (read_value == -1)
       {
         /* error */
-        iot_log_error (impln->lc, "error in GPIO read");
+        snprintf (buff, GROVE_ERR_BUFSZ, "error in GPIO read");
         ret_status = false;
       }
         /* Grove Button */
@@ -418,7 +406,7 @@ static bool grove_gethandler
       else
       {
         /* No other type support available for GPIO in the profile */
-        iot_log_error (impln->lc, "error in GPIO read for request: %d", requests->type);
+        snprintf (buff, GROVE_ERR_BUFSZ, "error in GPIO read for request type: %d", iot_typecode_type(requests->type));
         ret_status = false;
       }
     } /* GPIO */
@@ -429,7 +417,7 @@ static bool grove_gethandler
       if (read_value == -1)
       {
         /* error */
-        iot_log_error (impln->lc, "error in AIO read");
+        snprintf (buff, GROVE_ERR_BUFSZ, "error in AIO read");
         ret_status = false;
       }
       else
@@ -486,6 +474,11 @@ static bool grove_gethandler
               }
               readings[index].value = iot_data_alloc_f32 (rotaryvoltage);
             }
+            else
+            {
+              snprintf (buff, GROVE_ERR_BUFSZ, "Undefined %s device resource for RotarySensor", requests[index].resname);
+              ret_status = false;
+            }
             free (rotarysensor_attr);
           }
         }
@@ -499,7 +492,7 @@ static bool grove_gethandler
       ret_status = grove_bme_read_data (tph_dev, &read_data);
       if (ret_status == false)
       {
-        iot_log_error (impln->lc, "Unable to read new data from BME680 sensor()");
+        snprintf (buff, GROVE_ERR_BUFSZ, "Unable to read new data from BME680 sensor");
       }
       else
       {
@@ -533,7 +526,8 @@ static bool grove_gethandler
           }
           else
           {
-            iot_log_error (impln->lc, "Undefined %s device resource for BME680", requests[index].resname);
+            snprintf (buff, GROVE_ERR_BUFSZ, "Undefined %s device resource for BME680", requests[index].resname);
+            ret_status = false;
           }
           readings[index].value = iot_data_alloc_f32 (bme_data);
           free (bme_attr);
@@ -544,12 +538,23 @@ static bool grove_gethandler
     else
     {
       /* Only GPIO, AIO and I2C interface types are supported */
-      iot_log_error (impln->lc, "Unsupported type, error in grove_gethandler()");
+      snprintf (buff, GROVE_ERR_BUFSZ, "Unsupported type, error in grove_gethandler()");
       ret_status = false;
     }
   } /* dev_ctxt != NULL */
   free (grove_attr);
+  if (!ret_status)
+  {
+    iot_log_error (impln->lc, buff);
+    * exception = iot_data_alloc_string (buff, IOT_DATA_TAKE);
+  }
+  else
+  {
+    free (buff);
+  }
+
   pthread_mutex_unlock (&impln->mutex);
+  
   return ret_status;
 }
 
@@ -568,6 +573,8 @@ static bool grove_puthandler
   grove_pidriver_t *impln = (grove_pidriver_t *) impl;
 
   pthread_mutex_lock (&impln->mutex);
+  char * buff = malloc (GROVE_ERR_BUFSZ);
+
   /* Get the device context */
   const devsdk_nvpairs *dev_attr = requests[0].attributes;
   assert (dev_attr != NULL);
@@ -586,7 +593,7 @@ static bool grove_puthandler
       status = mraa_gpio_write (gpio_dev, iot_data_bool (values[--nvalues]));
       if (status != MRAA_SUCCESS)
       {
-        iot_log_error (impln->lc, "gpio write failure = %d\n", status);
+        snprintf (buff, GROVE_ERR_BUFSZ, "gpio write failure = %d", status);
       }
     }
     else if (strcmp (grove_attr->pin_type, "I2C") == 0)
@@ -618,14 +625,14 @@ static bool grove_puthandler
       status = grove_lcd_set_cursor (mraa_i2cdev, row, column);
       if (status != MRAA_SUCCESS)
       {
-        iot_log_error (impln->lc, "lcd set_cursor error status = %d", status);
+        snprintf (buff, GROVE_ERR_BUFSZ, "lcd set_cursor error status = %d", status);
       }
       else
       {
         status = grove_lcd_write (mraa_i2cdev, display_string, strlen (display_string));
         if (status != MRAA_SUCCESS)
         {
-          iot_log_error (impln->lc, "lcd write error status = %d", status);
+          snprintf (buff, GROVE_ERR_BUFSZ, "lcd write error status = %d", status);
         }
       }
     }
@@ -636,6 +643,16 @@ static bool grove_puthandler
     }
   }
   free (grove_attr);
+  if (!status)
+  {
+    iot_log_error (impln->lc, buff);
+    * exception = iot_data_alloc_string (buff, IOT_DATA_TAKE);
+  }
+  else
+  {
+    free (buff);
+  }
+
   pthread_mutex_unlock (&impln->mutex);
   return (status == MRAA_SUCCESS);
 }
