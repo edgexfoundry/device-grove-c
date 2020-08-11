@@ -1,0 +1,34 @@
+ARG BASE=alpine:3.11
+FROM ${BASE} as builder
+MAINTAINER Bindu Rao <bindu@iotechsys.com>
+RUN apk add --update --no-cache build-base git gcc cmake make linux-headers yaml-dev libmicrohttpd-dev curl-dev util-linux-dev ncurses-dev
+
+COPY scripts /device-grove/scripts
+COPY src /device-grove/src/
+COPY VERSION /device-grove
+RUN mkdir -p /device-grove/build
+
+WORKDIR /device-grove
+RUN /device-grove/scripts/build_deps.sh 1
+RUN /device-grove/scripts/build.sh
+
+FROM alpine:3.9
+
+RUN apk add --update --no-cache linux-headers yaml libmicrohttpd curl libuuid
+
+COPY --from=builder /device-grove/build/release/device-grove /.
+COPY --from=builder /usr/lib/libcsdk.so /usr/lib
+COPY --from=builder /usr/include/edgex /usr/include/edgex
+COPY --from=builder /usr/include/iot /usr/include/iot
+COPY --from=builder /usr/local/include/mraa /usr/local/include/
+COPY --from=builder /usr/local/include/mraa.h /usr/local/include/
+COPY --from=builder /usr/local/lib/libmraa.so* /usr/local/lib/
+COPY --from=builder /usr/local/lib64/libcbor.so* /usr/local/lib64/
+
+COPY LICENSE /.
+COPY Attribution.txt /.
+COPY res /res
+COPY profiles /profiles
+
+ENTRYPOINT ["/device-grove"]
+CMD ["--confdir=/res", "--registry=consul://edgex-core-consul:8500"]

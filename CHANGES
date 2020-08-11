@@ -1,3 +1,6 @@
+Changes for release v1.2.1
+- Device service updated to use C SDK (v1.2.2)
+
 Changes for Geneva release (v1.2.0)
 - Device service updated to use C SDK (v1.2.1)
 - Updated the device service to use V2 API
