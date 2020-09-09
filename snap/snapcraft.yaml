@@ -64,7 +64,7 @@ parts:
     stage: [rpi_patch]
   libmraa:
     source: https://github.com/intel-iot-devkit/mraa.git
-    source-commit: d320776
+    source-commit: d3207769e7a9df9f4afe10d502964f51ef0dca76
     plugin: cmake
     configflags:
       - -DBUILDSWIG=OFF
