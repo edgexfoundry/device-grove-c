@@ -28,7 +28,7 @@ if [ "$BUILD_CSDK" = "1" ]
 then
   cd /device-grove/deps
 
-  git clone https://github.com/PJK/libcbor
+  git clone --depth 1 --branch v0.7.0 https://github.com/PJK/libcbor
   sed -e 's/-flto//' -i libcbor/CMakeLists.txt
   cmake -DCMAKE_BUILD_TYPE=Release -DCBOR_CUSTOM_ALLOC=ON libcbor
   make
