@@ -21,6 +21,9 @@ test:
 clean:
 	    rm -f $(MICROSERVICES)
 
+version:
+	    echo -n ${VERSION}
+
 docker: $(DOCKERS)
 
 docker_device_grove_c:

@@ -5,7 +5,8 @@ RUN apk add --update --no-cache build-base git gcc cmake make linux-headers yaml
 
 COPY scripts /device-grove/scripts
 COPY src /device-grove/src/
-COPY VERSION /device-grove
+COPY Makefile /device-grove/Makefile
+RUN cd /device-grove && make -s version | tee /device-grove/VERSION && rm -f /device-grove/Makefile
 RUN mkdir -p /device-grove/build
 
 WORKDIR /device-grove

@@ -5,14 +5,15 @@ RUN apk add --update --no-cache build-base git gcc cmake make linux-headers yaml
 
 COPY scripts /device-grove/scripts
 COPY src /device-grove/src/
-COPY VERSION /device-grove
+COPY Makefile /device-grove/Makefile
+RUN cd /device-grove && make -s version | tee /device-grove/VERSION && rm -f /device-grove/Makefile
 RUN mkdir -p /device-grove/build
 
 WORKDIR /device-grove
 RUN /device-grove/scripts/build_deps.sh 1
 RUN /device-grove/scripts/build.sh
 
-FROM alpine:3.9
+FROM alpine:3.11
 
 RUN apk add --update --no-cache linux-headers yaml libmicrohttpd curl libuuid
 
