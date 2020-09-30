@@ -7,10 +7,10 @@ MICROSERVICES=build/release/device-grove-c/device-grove-c
 DOCKERS=docker_device_grove_c
 .PHONY: $(DOCKERS)
 
-VERSION=$(shell cat ./VERSION || echo 0.0.0)
+VERSION=$(shell cat ./VERSION)
 GIT_SHA=$(shell git rev-parse HEAD)
 
-build: ${MICROSERVICES}
+build: ./VERSION ${MICROSERVICES}
 
 build/release/device-grove-c/device-grove-c:
 	    scripts/build.sh
@@ -21,14 +21,17 @@ test:
 clean:
 	    rm -f $(MICROSERVICES)
 
-version:
-	    echo -n ${VERSION}
+./VERSION:
+	    @git describe --abbrev=0 > ./VERSION
+
+version: ./VERSION
+	    echo ${VERSION}
 
 docker: $(DOCKERS)
 
 docker_device_grove_c:
 	    docker build \
-	        -f scripts/Dockerfile.alpine-3.9 \
+	        -f scripts/Dockerfile.alpine-3.11 \
 	        --label "git_sha=$(GIT_SHA)" \
 	        -t edgexfoundry/docker-device-grove-c:${GIT_SHA} \
 	        -t edgexfoundry/docker-device-grove-c:${VERSION}-dev \
