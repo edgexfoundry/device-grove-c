@@ -1,3 +1,7 @@
+Changes for release v1.2.2
+- Update to use cbor fixed version(0.7.0)
+- Generate VERSION file based on the git tag used
+
 Changes for release v1.2.1
 - Device service updated to use C SDK (v1.2.2)
 
@@ -6,10 +10,8 @@ Changes for Geneva release (v1.2.0)
 - Updated the device service to use V2 API
 
 Changes for Fuji release:
-
 - Device service updated to use C SDK (v1.1.0)
 
 Changes for Edinburgh release:
-
 - Device service updated to use C SDK (v1.0.0)
 - Added support to read temperature, humidity and pressure from grove Bosch Sensortec BME680
