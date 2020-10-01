@@ -19,10 +19,11 @@ The repository can be found on git at [libmraa](https://github.com/intel-iot-dev
 2. Build a docker image by using the following command
 ```
 sh> cd device-grove-c
-sh> docker build . -t < device-grove-c > -f ./scripts/Dockerfile.alpine-3.9
+sh> make version 
+sh> docker build . -t device-grove-c -f ./scripts/Dockerfile.alpine-3.11
 
 ```
-This command shall build the dependencies - libmraa and device-c-sdk library to build device-grove-c release image.
+This command shall build the dependencies - libmraa and device-c-sdk library and create the release version of the docker image by the name 'device-grove-c'. This name can be replaced with your preferred name, if necessary.
 By default, the configuration and profile file used by the service are available in __'res'__ folder.
 
 ## Configuration for docker image
