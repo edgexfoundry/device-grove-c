@@ -27,7 +27,7 @@ clean:
 version: ./VERSION
 	    echo ${VERSION}
 
-docker: $(DOCKERS)
+docker: ./VERSION $(DOCKERS)
 
 docker_device_grove_c:
 	    docker build \
