@@ -307,7 +307,7 @@ static bool grove_init (void *impl, struct iot_logger_t *lc, const iot_data_t *c
 
   mraa_add_subplatform (MRAA_GROVEPI, "0");
 
-  BME680_Temp_Offset = (config) ? strtof (iot_data_string_map_get_string (config, "BME680_Temp_Offset"), NULL) : 0.0;
+  BME680_Temp_Offset = iot_data_f32 (iot_data_string_map_get (config, "BME680_Temp_Offset"));
 
   /* read the attributes from the device profile to initialize the driver */
   profiles = edgex_profiles (impln->svc);
@@ -358,6 +358,12 @@ static bool grove_init (void *impl, struct iot_logger_t *lc, const iot_data_t *c
   }
  
   return (status == MRAA_SUCCESS);
+}
+
+static void grove_reconfigure (void *impl, const iot_data_t *config)
+{
+  grove_pidriver_t *driver = (grove_pidriver_t *) impl;
+  iot_log_error (driver->lc, "Grove [Driver] configuration cannot be updated while running. Please restart the service.");
 }
 
 static bool grove_gethandler
@@ -735,6 +741,7 @@ static void grove_stop (void *impl, bool force)
 
 int main (int argc, char *argv[])
 {
+  iot_data_t *defaults = NULL;
   grove_pidriver_t *implObject = malloc (sizeof (grove_pidriver_t));
   memset (implObject, 0, sizeof (grove_pidriver_t));
   sem_init (&grove_sem, 0, 0);
@@ -746,6 +753,7 @@ int main (int argc, char *argv[])
   devsdk_callbacks myImpls = 
   {
       grove_init,
+      grove_reconfigure,
       NULL,
       grove_gethandler,
       grove_puthandler,
@@ -775,8 +783,14 @@ int main (int argc, char *argv[])
   }
 
   implObject->svc = grove_service;
+
+  /* Setup default configuration */
+
+  defaults = iot_data_alloc_map (IOT_DATA_STRING);
+  iot_data_string_map_add (defaults, "BME680_Temp_Offset", iot_data_alloc_f32 (0.0));
+
   /* Start the device service*/
-  devsdk_service_start (grove_service, &err);
+  devsdk_service_start (grove_service, defaults, &err);
   GROVE_ERR_CHECK (err);
 
   printf ("\nRunning - press ctrl-c to exit\n");
@@ -791,6 +805,7 @@ int main (int argc, char *argv[])
 
   sem_destroy (&grove_sem);
   devsdk_service_free (grove_service);
+  iot_data_free (defaults);
   free (implObject);
 
   return 0;
