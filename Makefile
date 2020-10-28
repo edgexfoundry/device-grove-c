@@ -22,7 +22,7 @@ clean:
 	    rm -f $(MICROSERVICES)
 
 ./VERSION:
-	    @git describe --abbrev=0 > ./VERSION
+	    @git describe --abbrev=0 | sed 's/^v//' > ./VERSION
 
 version: ./VERSION
 	    echo ${VERSION}

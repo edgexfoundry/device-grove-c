@@ -31,17 +31,3 @@ By default, the configuration and profile file used by the service are available
 2. --device=/dev/ < i2c-device > to map host device to the container. For Raspberry PI, it is i2c-1.
 
 **Note:** On Raspberry PI, make sure that i2c_arm=on is set. This enables i2c-1 device, required for communication between Grove PI & Raspberry PI boards.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
