@@ -3,7 +3,7 @@ set -e -x
 
 BUILD_CSDK=$1
 
-CSDK_VER=1.3.0-dev.10
+CSDK_VER=1.3.0
 
 # Dependencies
 if [ ! -d deps ]
