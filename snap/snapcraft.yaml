@@ -1,13 +1,6 @@
 name: edgex-device-grove
 base: core18
-version: "replace-me"
-version-script: |
-  if [ -f VERSION ]; then
-    PROJECT_VERSION=$(cat VERSION)
-  else
-    PROJECT_VERSION=local-dev
-  fi
-    echo $PROJECT_VERSION-$(date +%Y%m%d)+$(git rev-parse --short HEAD)
+adopt-info: version
 summary: Connect to Grove sensors on Raspberry Pi with EdgeX
 description: |
   The EdgeX Device Grove Service is developed to control/communicate Grove 
@@ -37,6 +30,19 @@ apps:
       - i2c
 
 parts:
+  version:
+    plugin: nil
+    source: snap/local
+    override-pull: |
+      cd $SNAPCRAFT_PROJECT_DIR
+      if [ -f VERSION ]; then
+        PROJECT_VERSION=$(cat VERSION)
+      else
+        PROJECT_VERSION="0.0.0"
+        # The cmake build requires a VERSION file
+        echo $PROJECT_VERSION > VERSION
+      fi
+      snapcraftctl set-version ${PROJECT_VERSION}
   config:
     source: .
     plugin: dump
@@ -69,7 +75,7 @@ parts:
     stage: [rpi_patch]
   libmraa:
     source: https://github.com/intel-iot-devkit/mraa.git
-    source-commit: d320776
+    source-commit: d3207769e7a9df9f4afe10d502964f51ef0dca76
     plugin: cmake
     configflags:
       - -DBUILDSWIG=OFF
@@ -94,7 +100,7 @@ parts:
     source-tag: SDK-0.2
     source-depth: 1
     plugin: dump
-    # see https://github.com/edgexfoundry/device-sdk-c/blob/edinburgh/scripts/build.sh#L42-L45
+    # see https://github.com/edgexfoundry/device-sdk-c/blob/master/scripts/build.sh
     # for how the c sdk expects these files to be organized
     organize:
       toml.c: src/c/toml.c
@@ -105,10 +111,10 @@ parts:
   iotech-c-utils:
     source: https://github.com/IOTechSystems/iotech-c-utils.git
     source-type: git
-    source-commit: 1a0be9f0ad9733e153daf3b6a1f00839cf59822d
+    source-commit: v1.1.1
     plugin: dump
-    # see https://github.com/edgexfoundry/device-sdk-c/blob/edinburgh/scripts/build.sh#L47-L69
-    # for how the c sdk expects these files to be organized
+   # see https://github.com/edgexfoundry/device-sdk-c/blob/master/scripts/build.sh
+   # for how the c sdk expects these files to be organized
     override-build: |
       snapcraftctl build
       # can't use the organize + stage keywords otherwise it hits a infinite
@@ -128,7 +134,7 @@ parts:
       - -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
       - -DCMAKE_BUILD_TYPE=Release
     source: https://github.com/edgexfoundry/device-sdk-c.git
-    source-branch: edinburgh
+    source-branch: v1.3.0
     source-subdir: src
     override-build: |
       # copy all of the dep sources from $SNAPCRAFT_STAGE into the build folder
