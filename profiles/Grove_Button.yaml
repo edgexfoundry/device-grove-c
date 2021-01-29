@@ -11,7 +11,7 @@ deviceResources:
     { Pin_Num: "D4", Interface: "GPIO", Type: "IN" }
   properties:
     value:
-      { type: "Uint8", readWrite: "RW", size: "1", minimum: "0", maximum: "1", defaultValue: "0" }
+      { type: "Uint8", readWrite: "RW", minimum: "0", maximum: "1", defaultValue: "0" }
     units:
       { type: "String", readWrite: "R", defaultValue: "" }
 
