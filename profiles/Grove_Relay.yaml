@@ -11,7 +11,7 @@ deviceResources:
     { Pin_Num: "D7", Interface: "GPIO", Type: "OUT" }
   properties:
     value:
-      { type: "Bool", readWrite: "RW", size: "1", minimum: "0", maximum: "1", defaultValue: "0" }
+      { type: "Bool", readWrite: "RW" }
     units:
       { type: "String", readWrite: "R", defaultValue: "on/off" }
 
