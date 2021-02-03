@@ -7,6 +7,7 @@
   StartupMsg = "device Grove PI started"
   ReadMaxLimit = 256
   Timeout = 5000
+  CheckInterval = '10s'
 
 [Clients]
   [Clients.Data]
