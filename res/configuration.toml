@@ -32,10 +32,6 @@
 [Driver]
   BME680_Temp_Offset = -1.0
 
-[Logging]
-  RemoteURL = ""
-  File = "-"
-
 [[DeviceList]]
   Name = "GroveDevice"
   Profile = "Grove_Device"
