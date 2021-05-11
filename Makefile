@@ -33,6 +33,6 @@ docker_device_grove_c:
 	    docker build \
 	        -f scripts/Dockerfile.alpine \
 	        --label "git_sha=$(GIT_SHA)" \
-	        -t edgexfoundry/docker-device-grove-c:${GIT_SHA} \
-	        -t edgexfoundry/docker-device-grove-c:${VERSION}-dev \
+	        -t edgexfoundry/device-grove:${GIT_SHA} \
+	        -t edgexfoundry/device-grove:${VERSION}-dev \
             .
