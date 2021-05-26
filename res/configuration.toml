@@ -1,7 +1,7 @@
 [Service]
   Host = "edgex-device-grove"
   ServerBindAddr = '0.0.0.0'
-  Port = 49992
+  Port = 59992
   ConnectRetries = 3
   HealthCheck = ""
   StartupMsg = "device Grove PI started"
@@ -12,11 +12,11 @@
 [Clients]
   [Clients.Data]
     Host = "edgex-core-data"
-    Port = 48080
+    Port = 59880
 
   [Clients.Metadata]
     Host = "edgex-core-metadata"
-    Port = 48081
+    Port = 59881
 
 [Device]
   DataTransform = true
