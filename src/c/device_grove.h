@@ -49,9 +49,9 @@ typedef enum
 
 typedef struct
 {
-  char *pin_no;
-  char *pin_type;
-  char *type;
+  const char *pin_no;
+  const char *pin_type;
+  const char *type;
   bool normalize;
 } grove_attributes_t;
 

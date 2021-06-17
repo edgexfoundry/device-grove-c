@@ -1,3 +1,7 @@
+Changes for release v2.2.0
+- Device service updated to use C SDK (v2.2.0)
+- Update to mraa library version 2.2.0
+
 Changes for release v1.3.1
 - Device service updated to use C SDK (v1.3.1)
 

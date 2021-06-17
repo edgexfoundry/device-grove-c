@@ -6,7 +6,7 @@
 The EdgeX Device Grove Service is developed to control/communicate Grove sensors connected on Grove PI in an EdgeX deployment
 
 ## Supported Boards:
-Raspberry PI 3+ - ARM64 bit
+Raspberry PI 3, 4 - ARM64 bit
 
 ## Dependencies:
 
@@ -21,11 +21,10 @@ The repository can be found on git at [libmraa](https://github.com/intel-iot-dev
 2. Build a docker image by using the following command
 ```
 sh> cd device-grove-c
-sh> make version 
-sh> docker build . -t device-grove-c -f ./scripts/Dockerfile.alpine
+sh> make docker
 
 ```
-This command shall build the dependencies - libmraa and device-c-sdk library and create the release version of the docker image by the name 'device-grove-c'. This name can be replaced with your preferred name, if necessary.
+This command shall build the dependencies - libmraa and device-c-sdk library and create the release version of the docker image by the name 'device-grove-c'.
 By default, the configuration and profile file used by the service are available in __'res'__ folder.
 
 ## Configuration for docker image
@@ -33,3 +32,15 @@ By default, the configuration and profile file used by the service are available
 2. --device=/dev/ < i2c-device > to map host device to the container. For Raspberry PI, it is i2c-1.
 
 **Note:** On Raspberry PI, make sure that i2c_arm=on is set. This enables i2c-1 device, required for communication between Grove PI & Raspberry PI boards.
+
+### Building natively
+
+Before building natively the dependencies for the C SDK need to be installed: these are listed at https://github.com/edgexfoundry/device-sdk-c
+
+The `build_deps.sh` script downloads and builds the required libmraa and the EdgeX device SDK. The `build.sh` script is then used to build the device service.
+
+```
+sh> cd device-grove-c
+sh> ./scripts/build_deps.sh
+sh> ./scripts/build.sh
+```

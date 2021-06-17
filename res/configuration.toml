@@ -1,54 +1,44 @@
+[Writable]
+  LogLevel = "INFO"
+  [Writable.Device]
+    DataTransform = true
+    MaxCmdOps = 128
+    MaxCmdResultLen = 256
+
 [Service]
   Host = "edgex-device-grove"
   ServerBindAddr = "0.0.0.0"
   Port = 59992
-  ConnectRetries = 3
-  HealthCheck = ""
   StartupMsg = "device Grove PI started"
   ReadMaxLimit = 256
-  Timeout = 5000
-  CheckInterval = "10s"
+  RequestTimeout = "5s"
+  HealthCheckInterval = "10s"
 
 [Clients]
-  [Clients.Data]
+  [Clients.core-data]
     Host = "edgex-core-data"
     Port = 59880
 
-  [Clients.Metadata]
+  [Clients.core-metadata]
     Host = "edgex-core-metadata"
     Port = 59881
 
 [Device]
-  DataTransform = true
-  Discovery = false
-  InitCmd = ""
-  InitCmdArgs = ""
-  MaxCmdOps = 128
-  MaxCmdResultLen = 256
-  RemoveCmd = ""
-  RemoveCmdArgs = ""
-  SendReadingsOnChanged = true
+  ProfilesDir = "./res/profiles"
+  DevicesDir = "./res/devices"
+  UseMessageBus = true
 
 [Driver]
   BME680_Temp_Offset = -1.0
 
-[[DeviceList]]
-  Name = "GroveDevice"
-  Profile = "Grove_Device"
-  Description = "Grove Device to Read/Write sensors connected to GrovePI"
-  Labels = [ "Grove LED, Grove Button, Grove Buzzer, Grove LCD, Grove LightSensor, Grove Relay, Grove RotarySensor, Grove SoundSensor, Grove BME680Sensor" ]
-  [DeviceList.Protocols]
-    [DeviceList.Protocols.Other]
-      Address = "/api/v1/device/GroveDevice"
-  [[DeviceList.AutoEvents]]
-    Resource = "Get_RotarySensorMeasurements"
-    OnChange = false
-    Frequency = "2s"
-  [[DeviceList.AutoEvents]]
-    Resource = "Get_LightIntensity"
-    OnChange = false
-    Frequency = "2s"
-   [[DeviceList.AutoEvents]]
-    Resource = "Get_SoundIntensity"
-    OnChange = false
-    Frequency = "2s"
+[MessageQueue]
+  Protocol = "redis"
+  Host = "localhost"
+  Port = 6379
+  Type = "redis"
+  PublishTopicPrefix = "edgex/events/device" # /<device-profile-name>/<device-name>/<source-name> will be added to this Publish Topic prefix
+  [MessageQueue.Optional]
+    ClientId = "device-grove"
+    Qos = 0 # Quality of Sevice values are 0 (At most once), 1 (At least once) or 2 (Exactly once)
+    KeepAlive = 10 # Seconds (must be 2 or greater)
+    Retained = false
