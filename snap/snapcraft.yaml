@@ -35,14 +35,11 @@ parts:
     source: snap/local
     override-pull: |
       cd $SNAPCRAFT_PROJECT_DIR
-      if [ -f VERSION ]; then
-        PROJECT_VERSION=$(cat VERSION)
-      else
-        PROJECT_VERSION="0.0.0"
-        # The cmake build requires a VERSION file
-        echo $PROJECT_VERSION > VERSION
+      GIT_VERSION=$(git describe --tags --abbrev=0 | sed 's/v//')
+      if [ -z "$GIT_VERSION" ]; then
+        GIT_VERSION="0.0.0"
       fi
-      snapcraftctl set-version ${PROJECT_VERSION}
+      snapcraftctl set-version ${GIT_VERSION}
   config:
     source: .
     plugin: dump
@@ -151,6 +148,10 @@ parts:
   edgex-device-grove:
     source: .
     plugin: cmake
+    override-pull: |
+      snapcraftctl pull
+      cd $SNAPCRAFT_PROJECT_DIR
+      make version
     source-subdir: src/c
     after: 
       - device-sdk-c
