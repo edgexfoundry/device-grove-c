@@ -3,7 +3,8 @@ set -e -x
 
 BUILD_CSDK=$1
 
-CSDK_VER=1.3.1
+CSDK_VER=2.0.0
+MRAA_VER=2.2.0
 
 # Dependencies
 if [ ! -d deps ]
@@ -12,16 +13,11 @@ then
 
   cd /device-grove/deps
 
-  git clone https://github.com/intel-iot-devkit/mraa.git
+  git clone --depth 1 --branch v${MRAA_VER} https://github.com/intel-iot-devkit/mraa.git
   cd mraa
-  # This version contain fix to identify raspberry-pi 3
-  git reset --hard d320776
-
-# patch for raspberryPI
-  patch -p1 < /device-grove/scripts/rpi_patch
-  mkdir -p build && cd build
 
 # always install in lib folder
+  mkdir -p build && cd build
   cmake -DBUILDSWIG=OFF -DCMAKE_INSTALL_LIBDIR=lib ../.
   make && make install
 

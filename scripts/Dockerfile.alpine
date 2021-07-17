@@ -17,7 +17,9 @@
 ARG BASE=alpine:3.12
 FROM ${BASE} as builder
 LABEL maintainer="Bindu Rao <bindu@iotechsys.com>"
-RUN apk add --update --no-cache build-base git gcc cmake make linux-headers yaml-dev libmicrohttpd-dev curl-dev util-linux-dev ncurses-dev
+RUN wget https://iotech.jfrog.io/artifactory/alpine/KEY/support@iotechsys.com-5b990dd9.pub -O /etc/apk/keys/support@iotechsys.com-5b990dd9.pub
+RUN echo 'https://iotech.jfrog.io/artifactory/alpine/alpine-3.12' >> /etc/apk/repositories
+RUN apk add --update --no-cache build-base git gcc cmake make linux-headers yaml-dev libmicrohttpd-dev curl-dev util-linux-dev ncurses-dev paho-mqtt-c-dev hiredis-dev
 
 COPY scripts /device-grove/scripts
 COPY src /device-grove/src/
@@ -31,7 +33,9 @@ RUN /device-grove/scripts/build.sh
 FROM alpine:3.12
 WORKDIR /
 
-RUN apk add --update --no-cache linux-headers yaml libmicrohttpd curl libuuid
+RUN wget https://iotech.jfrog.io/artifactory/alpine/KEY/support@iotechsys.com-5b990dd9.pub -O /etc/apk/keys/support@iotechsys.com-5b990dd9.pub
+RUN echo 'https://iotech.jfrog.io/artifactory/alpine/alpine-3.12' >> /etc/apk/repositories
+RUN apk add --update --no-cache linux-headers yaml libmicrohttpd curl libuuid paho-mqtt-c-dev hiredis
 
 COPY --from=builder /device-grove/build/release/device-grove /.
 COPY --from=builder /usr/lib/libcsdk.so /usr/lib
@@ -45,7 +49,6 @@ COPY --from=builder /usr/local/lib64/libcbor.so* /usr/local/lib64/
 COPY LICENSE /.
 COPY Attribution.txt /.
 COPY res /res
-COPY profiles /profiles
 
 ENTRYPOINT ["/device-grove"]
 CMD ["--confdir=/res", "--registry=consul://edgex-core-consul:8500"]
