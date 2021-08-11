@@ -1,13 +1,13 @@
 [Service]
   Host = "edgex-device-grove"
-  ServerBindAddr = '0.0.0.0'
+  ServerBindAddr = "0.0.0.0"
   Port = 59992
   ConnectRetries = 3
   HealthCheck = ""
   StartupMsg = "device Grove PI started"
   ReadMaxLimit = 256
   Timeout = 5000
-  CheckInterval = '10s'
+  CheckInterval = "10s"
 
 [Clients]
   [Clients.Data]
