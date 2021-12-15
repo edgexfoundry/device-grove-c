@@ -3,23 +3,34 @@
 
 This folder contains snap packaging for the EdgeX Grove Device Service Snap
 
-The snap currently supports both `amd64` and `arm64` platforms.
-
+The snap currently supports `arm64` platform.
 
 ## Installation
 
 ### Installing snapd
-The snap can be installed on any system that supports snaps. You can see how to install
-snaps on your system [here](https://snapcraft.io/docs/installing-snapd/6735).
+The snap can be installed on any system that supports snaps. 
+You can see how to install snaps on your system [here](https://snapcraft.io/docs/installing-snapd/6735).
 
 However for full security confinement, the snap should be installed on an
 Ubuntu 18.04 LTS or later (Desktop or Server), or a system running Ubuntu Core 18 or later.
 
 ### Installing EdgeX Device Grove as a snap
 The snap is published in the snap store as [edgex-device-grove](https://snapcraft.io/edgex-device-grove).
+You can see the current revisions available for your machine's architecture by running the command:
+```bash
+snap info edgex-device-grove
+```
 
-**Note** - the snap has only been tested on Ubuntu Core, Desktop, and Server.
+The latest beta version of the snap can be installed using:
+```bash
 
+sudo snap install edgex-device-grove --beta
+```
+
+The latest development version of the snap can be installed using:
+```bash
+sudo snap install edgex-device-grove --edge
+```
 
 ## Snap configuration
 
@@ -40,7 +51,8 @@ the service sleeps for the defined interval and then tries again up to a maximum
 EdgeX services wait for dependencies (e.g. core-data) to become available and will exit after reaching the maximum duration if the dependencies aren't met.
 
 This environment variable sets the total duration in seconds allowed for the services to complete the bootstrap start-up. 
-Default is 60 seconds. Change the maximum duration:
+Default is 60 seconds. 
+Change the maximum duration:
 
 ```bash
 sudo snap set edgex-device-grove startup-duration=120
