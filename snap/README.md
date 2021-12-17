@@ -28,8 +28,6 @@ sudo snap install edgex-device-grove
 
 ## Snap configuration
 
-Device services implement a service dependency check on startup which ensures that 
-all of the runtime dependencies of a particular service are met before the service transitions to an active state.
 
 Snapd doesn't support orchestration between services in different snaps. 
 It is therefore possible on a reboot for a device service to come up faster than all of the required services running in the main edgexfoundry snap. 
@@ -40,11 +38,9 @@ then it might be left in a failed state.
 This situation might be more likely on constrained hardware (e.g. RPi).
 
 The default configuration file is in `/var/snap/edgex-device-grove/current/config/edgex-device-grove/res`. 
-Modifying configs are typically set from a [gadget snap](https://ubuntu.com/core/docs/gadget-snaps).
 
 This device service is started by default. 
-If there are changes made to the configuration file, 
-it will pick up any changes via command-line:
+Changes to the configuration files require a restart to take effect:
 ```bash
 sudo snap restart edgex-device-grove
 ```
