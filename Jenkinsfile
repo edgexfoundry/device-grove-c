@@ -14,6 +14,8 @@
 // limitations under the License.
 //
 
+@Library("edgex-global-pipelines@75023a5") _
+
 edgeXBuildCApp (
     project: 'device-grove-c',
     dockerBuildFilePath: 'scripts/Dockerfile.alpine-3.11-base',
