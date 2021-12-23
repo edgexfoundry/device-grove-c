@@ -14,6 +14,7 @@
 // limitations under the License.
 //
 
+
 edgeXBuildCApp (
     project: 'device-grove-c',
     dockerBuildFilePath: 'scripts/Dockerfile.alpine-base',
