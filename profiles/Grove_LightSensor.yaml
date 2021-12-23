@@ -11,7 +11,7 @@ deviceResources:
     { Pin_Num: "A0", Interface: "AIO", Type: "IN" }
   properties:
     value:
-      { type: "Float32", readWrite: "RW", minimum: "0", maximum: "", defaultValue: "0" }
+      { type: "Float32", readWrite: "RW", minimum: "0", defaultValue: "0" }
     units:
       { type: "String", readWrite: "R", defaultValue: "lumen" }
 

@@ -1,21 +1,22 @@
 [Service]
   Host = "edgex-device-grove"
-  ServerBindAddr = '0.0.0.0'
-  Port = 49992
+  ServerBindAddr = "0.0.0.0"
+  Port = 59992
   ConnectRetries = 3
   HealthCheck = ""
   StartupMsg = "device Grove PI started"
   ReadMaxLimit = 256
   Timeout = 5000
+  CheckInterval = "10s"
 
 [Clients]
   [Clients.Data]
     Host = "edgex-core-data"
-    Port = 48080
+    Port = 59880
 
   [Clients.Metadata]
     Host = "edgex-core-metadata"
-    Port = 48081
+    Port = 59881
 
 [Device]
   DataTransform = true
@@ -26,15 +27,10 @@
   MaxCmdResultLen = 256
   RemoveCmd = ""
   RemoveCmdArgs = ""
-  ProfilesDir = ""
   SendReadingsOnChanged = true
 
 [Driver]
   BME680_Temp_Offset = -1.0
-
-[Logging]
-  RemoteURL = ""
-  File = "-"
 
 [[DeviceList]]
   Name = "GroveDevice"
