@@ -1,23 +1,61 @@
-Changes for release v1.3.1
+## EdgeX Grove Device Service
+[Github repository](https://github.com/edgexfoundry/device-grove-c)
+
+<a name="2.2.0"></a>
+
+## v2.2.0 Kamakura - 2022-05-11
+
+### Bug Fixes 🐛
+- Update all TOML to use quote and not single-quote ([#dd79b56](https://github.com/edgexfoundry/device-grove-c/commits/dd79b56))
+- Pin base image to alpine:3.12 ([#264a8a7](https://github.com/edgexfoundry/device-grove-c/commits/264a8a7))
+- Use new port assignments ([#65](https://github.com/edgexfoundry/device-grove-c/issues/65)) fix: standardise service name ([#66](https://github.com/edgexfoundry/device-grove-c/issues/66)) ([#1a77964](https://github.com/edgexfoundry/device-grove-c/commits/1a77964))
+- Remove legacy logging options ([#57](https://github.com/edgexfoundry/device-grove-c/issues/57)) ([#2a15280](https://github.com/edgexfoundry/device-grove-c/commits/2a15280))
+
+### Documentation 📖
+- Update build status badge ([#805941d](https://github.com/edgexfoundry/device-grove-c/commits/805941d))
+- Add badges to readme ([#741f120](https://github.com/edgexfoundry/device-grove-c/commits/741f120))
+
+### Build 👷
+- Update alpine base to 3.14 ([#0ed8fe5](https://github.com/edgexfoundry/device-grove-c/commits/0ed8fe5))
+- **snap:** update versioning to use git tag ([#70](https://github.com/edgexfoundry/device-grove-c/issues/70)) ([#9c78a47](https://github.com/edgexfoundry/device-grove-c/commits/9c78a47))
+
+### Continuous Integration 🔄
+- update local docker image names ([#cec5a56](https://github.com/edgexfoundry/device-grove-c/commits/cec5a56))
+
+<a name="1.3.1"></a>
+
+## v1.3.1
 - Device service updated to use C SDK (v1.3.1)
 
-Changes for Hanoi release (v1.3.0)
+<a name="1.3.0"></a>
+
+## v1.3.0 Hanoi
 - Device service updated to use C SDK (v1.3.0)
 
-Changes for release v1.2.2
+<a name="1.2.2"></a>
+
+## v1.2.2
 - Update to use cbor fixed version(0.7.0)
 - Generate VERSION file based on the git tag used
 
-Changes for release v1.2.1
+<a name="1.2.1"></a>
+
+## v1.2.1
 - Device service updated to use C SDK (v1.2.2)
 
-Changes for Geneva release (v1.2.0)
+<a name="1.2.0"></a>
+
+## v1.2.0 Geneva
 - Device service updated to use C SDK (v1.2.1)
 - Updated the device service to use V2 API
 
-Changes for Fuji release:
+<a name="1.1.0"></a>
+
+## v1.1.0 Fuji
 - Device service updated to use C SDK (v1.1.0)
 
-Changes for Edinburgh release:
+<a name="1.0.0"></a>
+
+## v1.0.0 Edinburgh
 - Device service updated to use C SDK (v1.0.0)
 - Added support to read temperature, humidity and pressure from grove Bosch Sensortec BME680
