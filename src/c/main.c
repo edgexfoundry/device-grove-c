@@ -25,32 +25,31 @@ static void grove_inthandler (int i)
   sem_post (&grove_sem);
 }
 
-static grove_attributes_t *get_groveattributes (const devsdk_nvpairs *device_attr)
+static devsdk_resource_attr_t get_groveattributes (void *impl, const iot_data_t *device_attr, iot_data_t **exception)
 {
   grove_attributes_t *grove_attr = (grove_attributes_t *) malloc (sizeof (grove_attributes_t));
-  for (; device_attr != NULL; device_attr = device_attr->next)
-  {
-    if (strcmp (device_attr->name, "Pin_Num") == 0)
-    {
-      grove_attr->pin_no = device_attr->value;
-    }
-    else if (strcmp (device_attr->name, "Interface") == 0)
-    {
-      grove_attr->pin_type = device_attr->value;
-    }
-    else if (strcmp (device_attr->name, "Type") == 0)
-    {
-      grove_attr->type = device_attr->value;
-    }
-    else if (strcmp (device_attr->name, "normalize") == 0)
-    {
-      grove_attr->normalize = (strcasecmp (device_attr->value, "true") == 0);
-    }
-  }
+  grove_attr->pin_no = iot_data_string_map_get_string (device_attr, "Pin_Num");
+  grove_attr->pin_type = iot_data_string_map_get_string (device_attr, "Interface");
+  grove_attr->type = iot_data_string_map_get_string (device_attr, "Type");
+  grove_attr->normalize = iot_data_string_map_get_bool (device_attr, "normalize", false);
   return grove_attr;
 }
 
-static grove_dev_ctxt_t *grove_device_lookup (grove_pidriver_t *impln, char *pin)
+static void free_groveattributes (void *impl, devsdk_resource_attr_t attrs)
+{
+  free (attrs);
+}
+
+static devsdk_address_t grove_create_address (void *impl, const devsdk_protocols *protocols, iot_data_t **exception)
+{
+  return (devsdk_address_t)protocols;  // We don't work with device addresses
+}
+
+static void grove_free_address (void *impl, devsdk_address_t address)
+{
+}
+
+static grove_dev_ctxt_t *grove_device_lookup (grove_pidriver_t *impln, const char *pin)
 {
   for (int index = 0; index < GROVE_NO_PORTS; index++)
   {
@@ -70,7 +69,7 @@ static grove_dev_ctxt_t *grove_device_lookup (grove_pidriver_t *impln, char *pin
 }
 
 static grove_dev_ctxt_t *grove_set_devctxt
-  (grove_pidriver_t *impln, void *dev, char *pin, char *type)
+  (grove_pidriver_t *impln, void *dev, const char *pin, const char *type)
 {
   int index = 0;
   grove_dev_ctxt_t *mraa_dev = NULL;
@@ -118,7 +117,7 @@ static grove_dev_ctxt_t *grove_set_devctxt
   return mraa_dev;
 }
 
-static mraa_result_t grove_gpio_init (grove_pidriver_t *impln, char *pin, char *type)
+static mraa_result_t grove_gpio_init (grove_pidriver_t *impln, const char *pin, const char *type)
 {
   mraa_result_t status = MRAA_SUCCESS;
 
@@ -160,7 +159,7 @@ static mraa_result_t grove_gpio_init (grove_pidriver_t *impln, char *pin, char *
   return status;
 }
 
-static mraa_result_t grove_aio_init (grove_pidriver_t *impln, char *pin, char *type)
+static mraa_result_t grove_aio_init (grove_pidriver_t *impln, const char *pin, const char *type)
 {
   mraa_result_t status = MRAA_SUCCESS;
 
@@ -183,7 +182,7 @@ static mraa_result_t grove_aio_init (grove_pidriver_t *impln, char *pin, char *t
   return status;
 }
 
-static mraa_result_t grove_lcd_init (grove_pidriver_t *impln, char *pin, char *type)
+static mraa_result_t grove_lcd_init (grove_pidriver_t *impln, const char *pin, const char *type)
 {
   /* Initialize I2C bus for LCD */
   mraa_i2c_context lcd_dev = NULL;
@@ -245,7 +244,7 @@ static mraa_result_t grove_lcd_init (grove_pidriver_t *impln, char *pin, char *t
   return status;
 }
 
-static mraa_result_t grove_bme680_init (grove_pidriver_t *impln, char *pin, char *type)
+static mraa_result_t grove_bme680_init (grove_pidriver_t *impln, const char *pin, const char *type)
 {
   mraa_result_t status = MRAA_SUCCESS;
 
@@ -268,7 +267,7 @@ static mraa_result_t grove_bme680_init (grove_pidriver_t *impln, char *pin, char
   return status;
 }
 
-static mraa_result_t grove_i2c_init (grove_pidriver_t *impln, char *pin, char *type)
+static mraa_result_t grove_i2c_init (grove_pidriver_t *impln, const char *pin, const char *type)
 {
   mraa_result_t status = MRAA_SUCCESS;
 
@@ -318,10 +317,11 @@ static bool grove_init (void *impl, struct iot_logger_t *lc, const iot_data_t *c
     grove_attributes_t *grove_attr = NULL;
     for (; dev_res != NULL; dev_res = dev_res->next)
     {
-      devsdk_nvpairs *dev_attr = dev_res->attributes;
+      const iot_data_t *dev_attr = dev_res->attributes;
       assert (dev_attr != NULL);
+      iot_data_t *exc = NULL;
 
-      grove_attr = get_groveattributes (dev_attr);
+      grove_attr = get_groveattributes (impln, dev_attr, &exc);
 
       grove_dev_ctxt_t *dev = grove_device_lookup (impln, grove_attr->pin_no);
       if (dev != NULL)
@@ -360,21 +360,14 @@ static bool grove_init (void *impl, struct iot_logger_t *lc, const iot_data_t *c
   return (status == MRAA_SUCCESS);
 }
 
-static void grove_reconfigure (void *impl, const iot_data_t *config)
-{
-  grove_pidriver_t *driver = (grove_pidriver_t *) impl;
-  iot_log_error (driver->lc, "Grove [Driver] configuration cannot be updated while running. Please restart the service.");
-}
-
 static bool grove_gethandler
   (
     void *impl,
-    const char *devname,
-    const devsdk_protocols *protocols,
+    const devsdk_device_t *device,
     uint32_t nreadings,
     const devsdk_commandrequest *requests,
     devsdk_commandresult *readings,
-    const devsdk_nvpairs *qparams,
+    const iot_data_t *options,
     iot_data_t **exception
   )
 {
@@ -382,9 +375,7 @@ static bool grove_gethandler
 
   pthread_mutex_lock (&impln->mutex);
   char * buff = malloc (GROVE_ERR_BUFSZ);
-  const devsdk_nvpairs *dev_attr = requests->attributes;
-  assert (dev_attr != NULL);
-  grove_attributes_t *grove_attr = get_groveattributes (dev_attr);
+  const grove_attributes_t *grove_attr = (const grove_attributes_t  *)requests[0].resource->attrs;
   bool ret_status = true;
 
   grove_dev_ctxt_t *mraa_devctxt = grove_device_lookup (impln, grove_attr->pin_no);
@@ -405,14 +396,14 @@ static bool grove_gethandler
         ret_status = false;
       }
         /* Grove Button */
-      else if (iot_typecode_type (requests->type) == IOT_DATA_UINT8)
+      else if (iot_typecode_type (requests[0].resource->type) == IOT_DATA_UINT8)
       {
         readings->value = iot_data_alloc_ui8 (read_value);
       }
       else
       {
         /* No other type support available for GPIO in the profile */
-        snprintf (buff, GROVE_ERR_BUFSZ, "error in GPIO read for request type: %d", iot_typecode_type(requests->type));
+        snprintf (buff, GROVE_ERR_BUFSZ, "error in GPIO read for request type: %d", iot_typecode_type(requests[0].resource->type));
         ret_status = false;
       }
     } /* GPIO */
@@ -430,7 +421,7 @@ static bool grove_gethandler
       {
         // get adc bit range
         int16_t range = (1 << mraa_aio_get_bit (aio_dev)) - 1;
-        if (strcmp (requests->resname, "SoundIntensity") == 0)
+        if (strcmp (requests[0].resource->name, "SoundIntensity") == 0)
         {
           assert (nreadings == 1);
           assert (iot_typecode_type (requests->type) == IOT_DATA_FLOAT32);
@@ -442,10 +433,10 @@ static bool grove_gethandler
           }
           readings->value = iot_data_alloc_f32 (sound_intensity);
         }
-        else if (strcmp (requests->resname, "LightIntensity") == 0)
+        else if (strcmp (requests[0].resource->name, "LightIntensity") == 0)
         {
           assert (nreadings == 1);
-          assert (iot_typecode_type (requests->type) == IOT_DATA_FLOAT32);
+          assert (iot_typecode_type (requests[0].resource->type) == IOT_DATA_FLOAT32);
       
           /* Ref: https://github.com/intel-iot-devkit/upm/src/light/light.c */
           float light_intensity = (float) (10000.0 /
@@ -456,13 +447,13 @@ static bool grove_gethandler
         else
         {
           assert (nreadings == 2); /* For RotarySensorMeasurements */
-          grove_attributes_t *rotarysensor_attr = NULL;
+          const grove_attributes_t *rotarysensor_attr = NULL;
           for (int index = 0; index < nreadings; index++)
           {
             /* Get attribute for each device object to apply scale if applicable */
-            rotarysensor_attr = get_groveattributes (requests[index].attributes);
+            rotarysensor_attr = (const grove_attributes_t *)(requests[index].resource->attrs);
 
-            if (strcmp (requests[index].resname, "RotaryAngle") == 0)
+            if (strcmp (requests[index].resource->name, "RotaryAngle") == 0)
             {
               float rotaryangle = read_value;
               if (rotarysensor_attr->normalize)
@@ -471,7 +462,7 @@ static bool grove_gethandler
               }
               readings[index].value = iot_data_alloc_f32 (rotaryangle);
             }
-            else if (strcmp (requests[index].resname, "RotaryVoltage") == 0)
+            else if (strcmp (requests[index].resource->name, "RotaryVoltage") == 0)
             {
               float rotaryvoltage = read_value;
               if (rotarysensor_attr->normalize)
@@ -482,10 +473,9 @@ static bool grove_gethandler
             }
             else
             {
-              snprintf (buff, GROVE_ERR_BUFSZ, "Undefined %s device resource for RotarySensor", requests[index].resname);
+              snprintf (buff, GROVE_ERR_BUFSZ, "Undefined %s device resource for RotarySensor", requests[index].resource->name);
               ret_status = false;
             }
-            free (rotarysensor_attr);
           }
         }
       }
@@ -503,19 +493,19 @@ static bool grove_gethandler
       else
       {
         assert (nreadings == 3); // Temperature, Pressure and Humidity
-        grove_attributes_t *bme_attr = NULL;
+        const grove_attributes_t *bme_attr = NULL;
         for (int index = 0; index < nreadings; index++)
         {
           /* Get attribute for each device object to apply scale if applicable */
-          bme_attr = get_groveattributes (requests[index].attributes);
+          bme_attr = (const grove_attributes_t *) (requests[index].resource->attrs);
 
           float bme_data = 0.0;
 
-          if (strcmp (requests[index].resname, "Temperature") == 0)
+          if (strcmp (requests[index].resource->name, "Temperature") == 0)
           {
             bme_data = read_data.temperature;
           }
-          else if (strcmp (requests[index].resname, "Pressure") == 0)
+          else if (strcmp (requests[index].resource->name, "Pressure") == 0)
           {
             if (bme_attr->normalize)
             {
@@ -526,17 +516,16 @@ static bool grove_gethandler
               bme_data = read_data.pressure;
             }
           }
-          else if (strcmp (requests[index].resname, "Humidity") == 0)
+          else if (strcmp (requests[index].resource->name, "Humidity") == 0)
           {
             bme_data = read_data.humidity;
           }
           else
           {
-            snprintf (buff, GROVE_ERR_BUFSZ, "Undefined %s device resource for BME680", requests[index].resname);
+            snprintf (buff, GROVE_ERR_BUFSZ, "Undefined %s device resource for BME680", requests[index].resource->name);
             ret_status = false;
           }
           readings[index].value = iot_data_alloc_f32 (bme_data);
-          free (bme_attr);
           bme_attr = NULL;
         }
       }
@@ -548,7 +537,6 @@ static bool grove_gethandler
       ret_status = false;
     }
   } /* dev_ctxt != NULL */
-  free (grove_attr);
   if (!ret_status)
   {
     iot_log_error (impln->lc, buff);
@@ -567,11 +555,11 @@ static bool grove_gethandler
 static bool grove_puthandler
   (
     void *impl,
-    const char *devname,
-    const devsdk_protocols *protocols,
+    const devsdk_device_t *device,
     uint32_t nvalues,
     const devsdk_commandrequest *requests,
     const iot_data_t *values[],
+    const iot_data_t *options,
     iot_data_t **exception
   )
 {
@@ -582,9 +570,7 @@ static bool grove_puthandler
   char * buff = malloc (GROVE_ERR_BUFSZ);
 
   /* Get the device context */
-  const devsdk_nvpairs *dev_attr = requests[0].attributes;
-  assert (dev_attr != NULL);
-  grove_attributes_t *grove_attr = get_groveattributes (dev_attr);
+  const grove_attributes_t *grove_attr = (const grove_attributes_t *)requests[0].resource->attrs;
 
   grove_dev_ctxt_t *mraa_devctxt = grove_device_lookup (impln, grove_attr->pin_no);
   if (mraa_devctxt != NULL)
@@ -593,7 +579,7 @@ static bool grove_puthandler
     {
       mraa_gpio_context gpio_dev = (mraa_gpio_context) mraa_devctxt->dev_ctxt;
 
-      assert (iot_typecode_type(requests->type) == IOT_DATA_BOOL);
+      assert (iot_typecode_type(requests[0].resource->type) == IOT_DATA_BOOL);
       assert (nvalues == 1);
 
       status = mraa_gpio_write (gpio_dev, iot_data_bool (values[--nvalues]));
@@ -615,15 +601,15 @@ static bool grove_puthandler
 
       for (int index = 0; index < nvalues; index++)
       {
-        if (strcmp (requests[index].resname, "Display-String") == 0)
+        if (strcmp (requests[index].resource->name, "Display-String") == 0)
         {
           display_string = (char *)iot_data_string (values[index]);
         }
-        else if (strcmp (requests[index].resname, "Row") == 0)
+        else if (strcmp (requests[index].resource->name, "Row") == 0)
         {
           row = iot_data_ui8 (values[index]);
         }
-        else if (strcmp (requests[index].resname, "Column") == 0)
+        else if (strcmp (requests[index].resource->name, "Column") == 0)
         {
           column = iot_data_ui8 (values[index]);
         }
@@ -648,7 +634,6 @@ static bool grove_puthandler
       status = MRAA_ERROR_FEATURE_NOT_IMPLEMENTED;
     }
   }
-  free (grove_attr);
   if (!status)
   {
     iot_log_error (impln->lc, buff);
@@ -750,15 +735,17 @@ int main (int argc, char *argv[])
   err.code = 0;
 
   /* Device Callbacks */
-  devsdk_callbacks myImpls = 
-  {
+  devsdk_callbacks *myImpls = devsdk_callbacks_init
+  (
       grove_init,
-      grove_reconfigure,
-      NULL,
       grove_gethandler,
       grove_puthandler,
-      grove_stop
-   };
+      grove_stop,
+      grove_create_address,
+      grove_free_address,
+      get_groveattributes,
+      free_groveattributes
+  );
 
    /* Initalise a device grove service */
   devsdk_service_t *grove_service = devsdk_service_new
@@ -805,6 +792,7 @@ int main (int argc, char *argv[])
 
   sem_destroy (&grove_sem);
   devsdk_service_free (grove_service);
+  free (myImpls);
   iot_data_free (defaults);
   free (implObject);
 

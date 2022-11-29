@@ -1,0 +1,25 @@
+{
+  "name": "GroveDevice",
+  "profileName": "Grove_Device",
+  "description": "Grove Device to Read/Write sensors connected to GrovePI",
+  "labels": [ "Grove LED", "Grove Button", "Grove Buzzer", "Grove LCD", "Grove LightSensor", "Grove Relay", "Grove RotarySensor", "Grove SoundSensor", "Grove BME680Sensor" ],
+  "protocols": { "other" : { } },
+  "autoevents":
+  [
+    {
+      "sourceName": "Get_RotarySensorMeasurements",
+      "onChange": false,
+      "interval": "2s"
+    },
+    {
+      "sourceName": "LightIntensity",
+      "onChange": false,
+      "interval": "2s"
+    },
+    {
+      "sourceName": "SoundIntensity",
+      "onChange": false,
+      "interval": "2s"
+    }
+  ]
+}

@@ -1,47 +1,34 @@
 #!/bin/sh
 set -e -x
 
-BUILD_CSDK=$1
-
-CSDK_VER=1.3.1
+CSDK_VER=2.2.0
+MRAA_VER=2.2.0
+MRAA_PATCHES=aaa0a5cd4e401bde4fb3691dd4e6c70a5c61e031
 
 # Dependencies
 if [ ! -d deps ]
 then
-  mkdir deps
-
-  cd /device-grove/deps
+  mkdir -p deps/usr
+  cd deps
 
   git clone https://github.com/intel-iot-devkit/mraa.git
   cd mraa
-  # This version contain fix to identify raspberry-pi 3
-  git reset --hard d320776
-
-# patch for raspberryPI
-  patch -p1 < /device-grove/scripts/rpi_patch
-  mkdir -p build && cd build
+  git checkout v${MRAA_VER}
+  git cherry-pick -n ${MRAA_PATCHES}
+  mkdir build
+  cd build
 
 # always install in lib folder
-  cmake -DBUILDSWIG=OFF -DCMAKE_INSTALL_LIBDIR=lib ../.
+  cmake -DBUILDSWIG=OFF -DCMAKE_INSTALL_PREFIX=../../usr -DCMAKE_INSTALL_LIBDIR=lib ..
   make && make install
+  cd ../..
 
 # get c-sdk from edgexfoundry and build
-if [ "$BUILD_CSDK" = "1" ]
-then
-  cd /device-grove/deps
-
-  git clone --depth 1 --branch v0.7.0 https://github.com/PJK/libcbor
-  sed -e 's/-flto//' -i libcbor/CMakeLists.txt
-  cmake -DCMAKE_BUILD_TYPE=Release -DCBOR_CUSTOM_ALLOC=ON libcbor
-  make
-  make install
 
   wget https://github.com/edgexfoundry/device-sdk-c/archive/v${CSDK_VER}.zip
   unzip v${CSDK_VER}.zip
   cd device-sdk-c-${CSDK_VER}
   ./scripts/build.sh
-  cp -rf include/* /usr/include/
-  cp build/release/c/libcsdk.so /usr/lib/
-fi
-  rm -rf /device-grove/deps
+  cd ..
+  tar -z -x -C usr --strip-components=1 -f device-sdk-c-${CSDK_VER}/build/release/csdk-${CSDK_VER}.tar.gz
 fi

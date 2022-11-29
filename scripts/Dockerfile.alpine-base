@@ -14,10 +14,12 @@
 # limitations under the License.
 #
 
-ARG BASE=alpine:3.14
+ARG BASE=alpine:3.16
 FROM ${BASE}
 LABEL maintainer="Bindu Rao <bindu@iotechsys.com>"
-RUN apk add --update --no-cache build-base git gcc cmake make linux-headers yaml-dev libmicrohttpd-dev curl-dev util-linux-dev ncurses-dev
+RUN wget https://iotech.jfrog.io/artifactory/api/security/keypair/public/repositories/alpine-release -O /etc/apk/keys/alpine.dev.rsa.pub
+RUN echo 'https://iotech.jfrog.io/artifactory/alpine-release/v3.16/main' >> /etc/apk/repositories
+RUN apk add --update --no-cache build-base git gcc cmake make linux-headers yaml-dev libmicrohttpd-dev curl-dev util-linux-dev ncurses-dev paho-mqtt-c-dev-1.3 hiredis-dev libcbor-dev
 
 COPY scripts /device-grove/scripts
 COPY src /device-grove/src/
@@ -26,5 +28,5 @@ RUN cd /device-grove && make -s version | tee /device-grove/VERSION && rm -f /de
 RUN mkdir -p /device-grove/build
 
 WORKDIR /device-grove
-RUN /device-grove/scripts/build_deps.sh 1
+RUN /device-grove/scripts/build_deps.sh
 RUN /device-grove/scripts/build.sh

@@ -11,6 +11,6 @@ cd $ROOT
 
 mkdir -p $ROOT/build/release
 cd $ROOT/build/release
-cmake -DCMAKE_BUILD_TYPE=Release $ROOT/src/c
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_FIND_ROOT_PATH=$ROOT/deps/usr $ROOT/src/c
 make 2>&1 | tee release.log
 

@@ -2,3 +2,5 @@
 prime/
 squashfs-root/
 VERSION
+build/
+deps/
